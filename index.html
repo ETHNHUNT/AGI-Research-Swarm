@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AGI Research Swarm</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --accent: #7c6af7;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --pink: #f472b6;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; }
+    a { color: var(--accent2); text-decoration: none; }
+
+    /* Layout */
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 10; }
+    .header h1 { font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--accent2), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header .subtitle { color: var(--muted); font-size: 12px; }
+    .nav { display: flex; gap: 4px; margin-left: auto; }
+    .nav button { background: none; border: none; color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all .15s; }
+    .nav button:hover { background: var(--surface2); color: var(--text); }
+    .nav button.active { background: var(--accent); color: white; }
+    .main { padding: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+    /* Stats bar */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .stat-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; line-height: 1; }
+    .stat-card .sub { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+    /* Sections */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-header h2 { font-size: 15px; font-weight: 600; }
+
+    /* Table */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(52,211,153,.15); color: var(--green); }
+    .badge-yellow { background: rgba(251,191,36,.15); color: var(--yellow); }
+    .badge-red { background: rgba(248,113,113,.15); color: var(--red); }
+    .badge-blue { background: rgba(96,165,250,.15); color: var(--blue); }
+    .badge-purple { background: rgba(124,106,247,.15); color: var(--accent2); }
+    .badge-gray { background: rgba(107,107,128,.15); color: var(--muted); }
+    .badge-pink { background: rgba(244,114,182,.15); color: var(--pink); }
+
+    /* Finding card */
+    .finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .finding-card .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .finding-card .title { font-weight: 600; margin-bottom: 6px; }
+    .finding-card .summary { color: var(--muted); font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .finding-card .expand-btn { background: none; border: none; color: var(--accent2); cursor: pointer; font-size: 12px; margin-top: 4px; }
+    .finding-card .summary.expanded { -webkit-line-clamp: unset; }
+    .citations-list { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .citations-list .cite { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .citations-list .cite a { color: var(--accent2); }
+
+    /* Claims */
+    .claim-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .claim-card .claim-text { font-size: 13px; line-height: 1.5; margin-bottom: 8px; }
+    .claim-card .claim-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .claim-card .evidence { margin-top: 8px; padding: 8px; background: var(--surface2); border-radius: 6px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* Dell queue */
+    .dell-card { background: var(--surface); border: 1px solid var(--yellow); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .dell-card .cmd { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 12px; margin-top: 10px; color: var(--green); display: flex; justify-content: space-between; align-items: center; }
+    .copy-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .copy-btn:hover { color: var(--text); }
+
+    /* Agents */
+    .agent-row .quality-bar { height: 4px; background: var(--border); border-radius: 2px; width: 80px; overflow: hidden; margin-top: 4px; }
+    .agent-row .quality-fill { height: 100%; border-radius: 2px; }
+
+    /* Filter bar */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--text); }
+
+    /* Empty state */
+    .empty { text-align: center; padding: 48px; color: var(--muted); }
+    .empty h3 { margin-bottom: 8px; font-size: 16px; }
+
+    /* Pulse dot */
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+    /* Progress ring */
+    .progress-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .division-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .division-bar .name { font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: capitalize; }
+    .division-bar .bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .division-bar .bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--pink)); transition: width .3s; }
+    .division-bar .counts { display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: var(--muted); }
+
+    /* Loading */
+    .loading { display: flex; justify-content: center; padding: 40px; }
+    .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const API = '';
+
+const QC_COLORS = {
+  passed: 'badge-green', flagged: 'badge-yellow', rejected: 'badge-red',
+  pending: 'badge-gray', '': 'badge-gray'
+};
+const CLAIM_COLORS = {
+  supported: 'badge-green', contradicted: 'badge-red', inconclusive: 'badge-yellow',
+  needs_hardware: 'badge-yellow', dell_queued: 'badge-yellow', dell_verified: 'badge-green',
+  dell_contradicted: 'badge-red', pending: 'badge-gray', in_progress: 'badge-blue'
+};
+const DIVISION_COLORS = {
+  architectures: '#7c6af7', training: '#60a5fa', reasoning: '#34d399',
+  memory: '#fbbf24', multiagent: '#f472b6', local_deployment: '#a78bfa',
+  vision: '#fb923c', voice: '#2dd4bf', benchmarks: '#e879f9'
+};
+
+function useFetch(url, deps = []) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(API + url);
+      setData(await r.json());
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  }, deps);
+  useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, deps);
+  return { data, loading, reload: load };
+}
+
+// ── Overview Tab ───────────────────────────────────────────────────────────
+function Overview({ stats }) {
+  if (!stats) return <div className="loading"><div className="spinner"/></div>;
+
+  const taskMap = Object.fromEntries((stats.tasks || []).map(r => [r.status, parseInt(r.count)]));
+  const findMap = Object.fromEntries((stats.findings || []).map(r => [r.qc_status, parseInt(r.count)]));
+  const agentMap = Object.fromEntries((stats.agents || []).map(r => [r.role, parseInt(r.count)]));
+  const claimMap = Object.fromEntries((stats.claims || []).map(r => [r.status, parseInt(r.count)]));
+  const totalTasks = Object.values(taskMap).reduce((a,b)=>a+b, 0);
+  const doneTasks = taskMap.done || 0;
+  const totalFindings = Object.values(findMap).reduce((a,b)=>a+b, 0);
+  const dellVerified = (claimMap.dell_verified || 0) + (claimMap.dell_contradicted || 0);
+
+  return (
+    <div>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="label">Tasks Done</div>
+          <div className="value" style={{color:'var(--green)'}}>{doneTasks}</div>
+          <div className="sub">of {totalTasks} total</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Findings</div>
+          <div className="value" style={{color:'var(--accent2)'}}>{totalFindings}</div>
+          <div className="sub">{findMap.passed || 0} verified</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Claims Tested</div>
+          <div className="value" style={{color:'var(--yellow)'}}>{dellVerified}</div>
+          <div className="sub">by Dell hardware</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Active Agents</div>
+          <div className="value" style={{color:'var(--blue)'}}>{Object.values(agentMap).reduce((a,b)=>a+b,0)}</div>
+          <div className="sub">A:{agentMap.researcher||0} B:{agentMap.critic||0} C:{agentMap.tester||0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Dell Queue</div>
+          <div className="value" style={{color:'var(--yellow)'}}>{claimMap.dell_queued || 0}</div>
+          <div className="sub">scripts ready to run</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Overall Progress</div>
+          <div className="value">{totalTasks > 0 ? Math.round(doneTasks/totalTasks*100) : 0}%</div>
+          <div className="sub">research complete</div>
+        </div>
+      </div>
+
+      <div className="section-header"><h2>Progress by Division</h2></div>
+      <div className="progress-section">
+        {Object.entries(DIVISION_COLORS).map(([div, color]) => {
+          const total = (stats.divisionTasks || {})[div] || 0;
+          const done = (stats.divisionDone || {})[div] || 0;
+          const pct = total > 0 ? Math.round(done/total*100) : 0;
+          return (
+            <div className="division-bar" key={div}>
+              <div className="name" style={{color}}>{div.replace('_',' ')}</div>
+              <div className="bar-track"><div className="bar-fill" style={{width:`${pct}%`,background:color}}/></div>
+              <div className="counts"><span>{done}/{total} tasks</span><span>{pct}%</span></div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="section-header"><h2>How to Contribute an Agent</h2></div>
+      <div className="table-wrap" style={{padding:'20px'}}>
+        <p style={{color:'var(--muted)',marginBottom:'16px',lineHeight:1.6}}>
+          Paste one of the prompts below into an OpenClaw session. The agent reads its SKILL file, registers, and starts working autonomously.
+        </p>
+        {[
+          { role: 'Agent A (Researcher)', color: 'var(--accent2)', prompt: `Read the SKILL.md at ${location.origin}/api/v1/skill and join the AGI Research Swarm as Agent A (Researcher). Register with role: "researcher", then follow the protocol. Keep going until nextAssignment is null.` },
+          { role: 'Agent B (Critic)', color: 'var(--yellow)', prompt: `Read the SKILL.md at ${location.origin}/api/v1/skill-b and join the AGI Research Swarm as Agent B (Critic). Register with role: "critic", then follow the protocol. Keep going until nextAssignment is null.` },
+          { role: 'Agent C (Tester)', color: 'var(--green)', prompt: `Read the SKILL.md at ${location.origin}/api/v1/skill-c and join the AGI Research Swarm as Agent C (Tester). Register with role: "tester", then follow the protocol. Keep going until nextAssignment is null.` },
+        ].map(({role, color, prompt}) => (
+          <div key={role} style={{marginBottom:'16px'}}>
+            <div style={{fontWeight:600,color,marginBottom:'6px'}}>{role}</div>
+            <div className="dell-card" style={{borderColor:color,padding:'10px 14px'}}>
+              <div style={{fontFamily:'monospace',fontSize:'12px',color:'var(--text)',wordBreak:'break-word',lineHeight:1.5}}>{prompt}</div>
+              <button className="copy-btn" style={{marginTop:'8px'}} onClick={() => navigator.clipboard.writeText(prompt)}>Copy</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Findings Tab ───────────────────────────────────────────────────────────
+function Findings() {
+  const [filter, setFilter] = useState('all');
+  const [expanded, setExpanded] = useState({});
+  const { data, loading } = useFetch(`/api/v1/findings${filter !== 'all' ? `?qcStatus=${filter}` : ''}`, [filter]);
+
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const findings = data?.findings || [];
+
+  return (
+    <div>
+      <div className="filter-bar">
+        {['all','passed','flagged','rejected','pending'].map(f => (
+          <button key={f} className={`filter-btn ${filter===f?'active':''}`} onClick={()=>setFilter(f)}>
+            {f.charAt(0).toUpperCase()+f.slice(1)} {f==='all' ? `(${findings.length})` : ''}
+          </button>
+        ))}
+      </div>
+      {findings.length === 0
+        ? <div className="empty"><h3>No findings yet</h3><p>Agents will submit findings as they complete research tasks.</p></div>
+        : findings.map(f => (
+          <div className="finding-card" key={f.id}>
+            <div className="meta">
+              <span className="badge" style={{background:`${DIVISION_COLORS[f.division]}22`,color:DIVISION_COLORS[f.division]}}>{f.division?.replace('_',' ')}</span>
+              <span className={`badge ${QC_COLORS[f.qc_status]}`}>{f.qc_status}</span>
+              <span className={`badge ${f.confidence==='high'?'badge-green':f.confidence==='medium'?'badge-yellow':'badge-red'}`}>{f.confidence}</span>
+              <span className="badge badge-gray">{f.agent_role === 'researcher' ? '🔬 A' : '🔍 B'} {f.agent_name}</span>
+              <span style={{color:'var(--muted)',fontSize:'12px',marginLeft:'auto'}}>{new Date(f.submitted_at).toLocaleDateString()}</span>
+            </div>
+            <div className="title">{f.task_title}</div>
+            <div className={`summary ${expanded[f.id]?'expanded':''}`}>{f.summary}</div>
+            <button className="expand-btn" onClick={()=>setExpanded(e=>({...e,[f.id]:!e[f.id]}))}>
+              {expanded[f.id]?'Show less':'Show more'}
+            </button>
+            {expanded[f.id] && f.citations && (
+              <div className="citations-list">
+                <div style={{fontSize:'12px',fontWeight:600,marginBottom:'6px',color:'var(--muted)'}}>CITATIONS ({JSON.parse(f.citations||'[]').length})</div>
+                {JSON.parse(f.citations||'[]').map((c,i) => (
+                  <div className="cite" key={i}>
+                    [{i+1}] <a href={c.url} target="_blank">{c.title}</a> — {c.authors?.slice(0,2).join(', ')}{c.authors?.length>2?' et al':''} ({c.year})
+                  </div>
+                ))}
+              </div>
+            )}
+            {expanded[f.id] && f.qc_issues && JSON.parse(f.qc_issues||'[]').length > 0 && (
+              <div style={{marginTop:'10px',padding:'8px 12px',background:'rgba(248,113,113,.08)',borderRadius:'6px',borderLeft:'3px solid var(--red)'}}>
+                <div style={{fontSize:'12px',fontWeight:600,color:'var(--red)',marginBottom:'4px'}}>QC ISSUES</div>
+                {JSON.parse(f.qc_issues).map((issue,i) => <div key={i} style={{fontSize:'12px',color:'var(--muted)',marginBottom:'2px'}}>• {issue}</div>)}
+              </div>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ── Claims Tab ─────────────────────────────────────────────────────────────
+function Claims() {
+  const [filter, setFilter] = useState('all');
+  const { data, loading } = useFetch(`/api/v1/claims${filter!=='all'?`?status=${filter}`:''}`, [filter]);
+
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const claims = data?.claims || [];
+
+  return (
+    <div>
+      <p style={{color:'var(--muted)',marginBottom:'16px',lineHeight:1.6}}>
+        Testable claims extracted from research findings. Agent B tags hardware claims → Agent C probes → Dell runs scripts.
+      </p>
+      <div className="filter-bar">
+        {['all','pending','supported','contradicted','needs_hardware','dell_queued','dell_verified'].map(f => (
+          <button key={f} className={`filter-btn ${filter===f?'active':''}`} onClick={()=>setFilter(f)}>{f.replace(/_/g,' ')}</button>
+        ))}
+      </div>
+      {claims.length === 0
+        ? <div className="empty"><h3>No claims yet</h3><p>Agent B will tag hardware claims from QC reviews.</p></div>
+        : claims.map(c => (
+          <div className="claim-card" key={c.id}>
+            <div className="claim-meta" style={{marginBottom:'6px'}}>
+              <span className={`badge ${CLAIM_COLORS[c.status]}`}>{c.status?.replace(/_/g,' ')}</span>
+              <span className="badge badge-purple">{c.claim_type?.replace(/_/g,' ')}</span>
+              {c.agent_c_method && <span className="badge badge-gray">{c.agent_c_method}</span>}
+            </div>
+            <div className="claim-text">"{c.claim}"</div>
+            {c.source_paper && <div style={{fontSize:'11px',color:'var(--muted)',marginTop:'4px'}}>Source: {c.source_paper}</div>}
+            {c.agent_c_evidence && <div className="evidence">Evidence: {c.agent_c_evidence}</div>}
+            {c.tokens_per_sec > 0 && (
+              <div className="evidence" style={{borderTop:'1px solid var(--border)',marginTop:'8px',paddingTop:'8px',color:'var(--green)'}}>
+                🖥️ Dell Result: {c.tokens_per_sec} tok/s · RAM: {c.ram_used_gb}GB · Claim {c.claim_verified ? '✅ verified' : '❌ contradicted'}
+              </div>
+            )}
+            {c.script_name && c.status === 'dell_queued' && (
+              <div className="dell-card" style={{marginTop:'10px'}}>
+                <div style={{fontSize:'12px',fontWeight:600,color:'var(--yellow)',marginBottom:'6px'}}>⏳ Awaiting Dell benchmark</div>
+                <div style={{fontSize:'12px',color:'var(--muted)',marginBottom:'8px'}}>Model: {c.model_to_test} · {c.estimated_runtime}</div>
+                <div className="cmd">
+                  <span>python {c.script_name}</span>
+                  <a href={`/api/v1/scripts/${c.script_id}`} download style={{color:'var(--yellow)',fontSize:'11px'}}>⬇ Download</a>
+                </div>
+              </div>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ── Dell Queue Tab ─────────────────────────────────────────────────────────
+function DellQueue() {
+  const { data, loading, reload } = useFetch('/api/v1/dell-queue');
+
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const items = data?.items || [];
+
+  return (
+    <div>
+      <div style={{background:'rgba(251,191,36,.08)',border:'1px solid rgba(251,191,36,.3)',borderRadius:'10px',padding:'16px',marginBottom:'20px'}}>
+        <div style={{fontWeight:600,color:'var(--yellow)',marginBottom:'6px'}}>🖥️ Dell Inspiron 7567 — Hardware Benchmark Queue</div>
+        <div style={{color:'var(--muted)',fontSize:'13px',lineHeight:1.6}}>
+          These claims require real consumer hardware to verify. Each item has a self-contained Python script.
+          Download it, run it on your Dell, it auto-reports back. One-liner per script: <code style={{color:'var(--green)'}}>SERVER_URL=YOUR_URL python bench_xxx.py</code>
+        </div>
+      </div>
+
+      {items.length === 0
+        ? <div className="empty"><h3>No scripts queued</h3><p>Agent C will populate this queue when it finds hardware-specific claims it cannot verify from Codespaces.</p></div>
+        : items.map(item => (
+          <div className="dell-card" key={item.claim_id}>
+            <div style={{fontWeight:600,marginBottom:'6px'}}>{item.claim}</div>
+            <div style={{fontSize:'12px',color:'var(--muted)',marginBottom:'10px'}}>
+              Model: {item.model_to_test} · Runtime: {item.estimated_runtime || '~10min'}
+              {item.agent_c_notes && <span> · Note: {item.agent_c_notes}</span>}
+            </div>
+            <div className="cmd">
+              <span>SERVER_URL={location.origin} python {item.script_name || 'bench.py'}</span>
+              <div style={{display:'flex',gap:'8px'}}>
+                <button className="copy-btn" onClick={() => navigator.clipboard.writeText(`SERVER_URL=${location.origin} python ${item.script_name}`)}>Copy</button>
+                {item.script_id && <a href={`/api/v1/scripts/${item.script_id}`} download className="copy-btn" style={{color:'var(--yellow)'}}>⬇ Download</a>}
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ── Agents Tab ─────────────────────────────────────────────────────────────
+function Agents() {
+  const { data, loading } = useFetch('/api/v1/agents');
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const agents = data?.agents || [];
+
+  const roleIcon = { researcher: '🔬', critic: '🔍', tester: '🧪' };
+  const roleColor = { researcher: 'var(--accent2)', critic: 'var(--yellow)', tester: 'var(--green)' };
+
+  return (
+    <div>
+      {agents.length === 0
+        ? <div className="empty"><h3>No agents registered yet</h3><p>Deploy an agent using the prompts in the Overview tab.</p></div>
+        : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Agent</th><th>Role</th><th>Tasks</th><th>QC</th><th>Quality</th><th>Last Seen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map(a => {
+                  const qs = Math.round(parseFloat(a.quality_score || 1) * 100);
+                  return (
+                    <tr key={a.id} className="agent-row">
+                      <td>
+                        <div style={{fontWeight:600}}>{a.name}</div>
+                        <div style={{color:'var(--muted)',fontSize:'11px',fontFamily:'monospace'}}>{a.id}</div>
+                      </td>
+                      <td><span style={{color:roleColor[a.role]}}>{roleIcon[a.role]} {a.role}</span></td>
+                      <td>{a.tasks_done}<br/><span style={{color:'var(--muted)',fontSize:'11px'}}>{a.findings_count} findings</span></td>
+                      <td>{a.qc_done}</td>
+                      <td>
+                        <div style={{fontSize:'13px',fontWeight:600,color:qs>=70?'var(--green)':qs>=50?'var(--yellow)':'var(--red)'}}>{qs}%</div>
+                        <div className="quality-bar"><div className="quality-fill" style={{width:`${qs}%`,background:qs>=70?'var(--green)':qs>=50?'var(--yellow)':'var(--red)'}}/></div>
+                        {a.flagged && <span className="badge badge-red" style={{fontSize:'10px',marginTop:'3px'}}>flagged</span>}
+                      </td>
+                      <td style={{color:'var(--muted)',fontSize:'12px'}}>{new Date(a.last_seen).toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState('overview');
+  const { data: stats } = useFetch('/api/v1/stats');
+
+  const tabs = ['overview','findings','claims','dell','agents'];
+  const labels = { overview:'Overview', findings:'Findings', claims:'Claims', dell:'Dell Queue', agents:'Agents' };
+
+  return (
+    <div className="app">
+      <div className="header">
+        <div>
+          <h1>🧠 AGI Research Swarm</h1>
+          <div className="subtitle">Multi-agent literature research → empirical verification</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:'8px',marginLeft:'auto'}}>
+          <div className="pulse"/>
+          <span style={{color:'var(--muted)',fontSize:'12px'}}>live</span>
+        </div>
+        <nav className="nav">
+          {tabs.map(t => (
+            <button key={t} className={tab===t?'active':''} onClick={()=>setTab(t)}>
+              {labels[t]}
+              {t==='dell' && stats && (() => { const q = (stats.claims||[]).find(c=>c.status==='dell_queued'); return q && parseInt(q.count) > 0 ? <span style={{background:'var(--yellow)',color:'black',borderRadius:'10px',padding:'1px 6px',fontSize:'10px',marginLeft:'4px'}}>{q.count}</span> : null; })()}
+            </button>
+          ))}
+        </nav>
+      </div>
+      <div className="main">
+        {tab === 'overview' && <Overview stats={stats}/>}
+        {tab === 'findings' && <Findings/>}
+        {tab === 'claims' && <Claims/>}
+        {tab === 'dell' && <DellQueue/>}
+        {tab === 'agents' && <Agents/>}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
