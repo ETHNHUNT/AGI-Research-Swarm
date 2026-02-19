@@ -1,190 +1,258 @@
-const { v4: uuid } = require('uuid');
-const DBS = ['PubMed','PubMed Central','Semantic Scholar','ClinicalTrials.gov','bioRxiv','medRxiv','TCGA','GDC Portal','Europe PMC','Cochrane Library','NIH Reporter','SEER','WHO ICTRP','DrugBank','UniProt','KEGG','Reactome','STRING','GeneCards','OMIM'];
-let taskCount = 0;
-function t(divId, divName, qId, qName, desc, terms = [], depth = 'standard', topic = '') {
-  taskCount++;
-  return { id: `tnbc-${divId}-${qId}-${String(taskCount).padStart(5,'0')}`, missionId: 'tnbc-001', divisionId: divId, divisionName: divName, queueId: qId, queueName: qName, description: desc, searchTerms: terms.length ? terms : desc.split(' ').slice(0, 5), databases: DBS.slice(0, 10), depth, topic };
-}
-function expand(divId, divName, qId, qName, topics, angles, depth = 'standard') {
-  const tasks = [];
-  topics.forEach(topic => { angles.forEach(angle => { tasks.push(t(divId, divName, qId, qName, `${topic}: ${angle}`, [topic, ...angle.split(' ').slice(0, 3)], depth, topic)); }); });
-  return tasks;
-}
+// missions.js — AGI Research Swarm task definitions
+// All tasks are sourced from arXiv only (cs.LG, cs.AI, cs.CL, cs.CV, eess.AS, cs.MA, cs.NE)
 
-const GENE=['Mutation landscape — frequency, hotspots, types across global populations','Functional role in normal mammary gland biology','Loss-of-function vs gain-of-function mutations','Role in DNA damage repair pathways','Protein-protein interactions and binding partners','Epigenetic regulation — promoter methylation, histone marks','Expression as prognostic biomarker — survival hazard ratios','Therapeutic targeting strategies — approved and investigational','Genotype-phenotype correlations in TNBC patients','Co-occurring mutations and synthetic lethality','Role in metastasis, invasion, and EMT','Racial and ethnic variation in mutation frequency','Single-cell sequencing insights — intratumoral heterogeneity','Mouse model and PDX studies — in vivo validation','Clinical trials targeting or stratifying by this gene'];
-const DRUG=['Mechanism of action — molecular target and downstream effects','Pharmacokinetics — ADME, half-life, drug interactions','Pharmacodynamics — dose-response and therapeutic window','Phase I trial results — safety, MTD, DLTs','Phase II trial results — ORR, DCR, duration of response','Phase III trial results — PFS, OS, statistical significance','Head-to-head comparison with standard of care','Biomarkers predicting response','Biomarkers predicting resistance','Resistance mechanisms — molecular and cellular','Adverse events — common, serious, fatal; management','Combination therapy evidence — synergy and antagonism','Neoadjuvant setting — pCR rates and EFS','Adjuvant setting — DFS and OS data','Metastatic setting — sequencing considerations','Real-world evidence — post-approval data','Cost-effectiveness analyses','Regulatory status — FDA, EMA approvals'];
-const IMMUNE=['Role in anti-tumor immunity in TNBC','Tumor infiltration patterns and prognostic value','Interaction with checkpoint inhibitors','Exhaustion markers — transcriptomic profiling','Single-cell RNA-seq characterization in TNBC','Spatial distribution — multiplex imaging','Crosstalk with other immune and stromal cells','Cytokine and chemokine production','Therapeutic strategies to modulate activity','Role in treatment resistance','Changes during neoadjuvant treatment','Differences across TNBC molecular subtypes','Biomarker potential for patient stratification','Preclinical models — co-culture, organoid, mouse'];
-const TRIAL=['Study design — randomization, blinding, control, sample size','Patient population — inclusion/exclusion, demographics, biomarkers','Primary endpoint results — effect size, CI, p-value','Secondary endpoints — OS, ORR, DOR, PROs','Pre-specified subgroup analyses','Post-hoc exploratory analyses','Safety — grade ≥3 AEs, discontinuation rates','Biomarker correlative studies','Statistical methodology critique','Impact on guidelines (NCCN, ESMO)','Comparison with competing trials','Long-term follow-up data'];
+const tasks = [
 
-function divMolBio(){
-const tasks=[];
-const genes=['TP53','BRCA1','BRCA2','PTEN','RB1','CDKN2A','CDKN2B','APC','SMAD4','VHL','PIK3CA','PIK3R1','AKT1','AKT2','AKT3','MTOR','TSC1','TSC2','STK11','RICTOR','KRAS','NRAS','HRAS','BRAF','MAP2K1','MAP2K2','MAP3K1','EGFR','ERBB2','ERBB3','ERBB4','FGFR1','FGFR2','FGFR3','FGFR4','MET','ALK','ROS1','RET','NTRK1','NTRK2','NTRK3','PDGFRA','KIT','IGF1R','MYC','MYCN','FOXA1','GATA3','ESR1','PGR','AR','SOX2','SOX9','SOX10','FOXM1','FOXO3','ARID1A','ARID1B','ARID2','SMARCA4','SMARCB1','KMT2C','KMT2D','KDM6A','SETD2','EP300','CREBBP','CDK4','CDK6','CCND1','CCNE1','CCNE2','CDK2','WEE1','CHK1','CHK2','ATM','ATR','PALB2','RAD51','RAD51C','RAD51D','BRIP1','BARD1','NBN','MRE11','FANCA','FANCD2','BCL2','MCL1','BAX','XIAP','NOTCH1','NOTCH2','NOTCH3','NOTCH4','JAG1','DLL3','DLL4','HES1','CTNNB1','AXIN1','GSK3B','WNT1','WNT3A','WNT5A','FZD7','RSPO2','RNF43','SHH','PTCH1','SMO','GLI1','GLI2','YAP1','TAZ','LATS1','LATS2','NF2','CD274','PDCD1','CTLA4','LAG3','TIGIT','CD47','MDM2','MDM4','NF1','TERT','TBX3','CBFB','RUNX1','SF3B1'];
-const uniqGenes=[...new Set(genes)];
-tasks.push(...expand('mol-bio','Molecular Biology','genomics','Genomics & Mutations',uniqGenes,GENE,'deep'));
+  // ══════════════════════════════════════════════════
+  // DIVISION 1: ARCHITECTURES
+  // Small, efficient model architectures
+  // ══════════════════════════════════════════════════
 
-const epi=['Global DNA methylation landscape in TNBC','Promoter hypermethylation of BRCA1 in sporadic TNBC','Promoter hypermethylation of RASSF1A','Promoter hypermethylation of CDH1','Promoter hypermethylation of GSTP1','CpG island methylator phenotype','Histone H3K27me3 — EZH2 and Polycomb','Histone H3K4me3 — MLL/KMT2 complex','Histone acetylation — HATs and HDACs','Super-enhancers and enhancer hijacking','Chromatin accessibility — ATAC-seq','3D genome organization — TADs and loops','lncRNA HOTAIR','lncRNA MALAT1','lncRNA NEAT1','lncRNA XIST','lncRNA H19','MicroRNA-21','MicroRNA-155','MicroRNA-200 family and EMT','MicroRNA-10b metastasis','MicroRNA-31','MicroRNA-34a','MicroRNA-221/222','Circular RNAs landscape','DNMT inhibitors — azacitidine, decitabine','HDAC inhibitors — vorinostat, entinostat','BET bromodomain inhibitors — JQ1, BMS-986158','EZH2 inhibitors — tazemetostat','LSD1/KDM1A inhibitors','Single-cell epigenomics','Liquid biopsy methylation markers'];
-tasks.push(...expand('mol-bio','Molecular Biology','epigenetics','Epigenetics & Non-coding RNA',epi,['Landscape and profiling studies','Functional role in TNBC biology','Biomarker potential','Therapeutic targeting','Differences across subtypes','Racial and ethnic variation','Interaction with genomic alterations','Emerging technologies'],'deep'));
+  { id: 'arch-001', division: 'architectures', title: 'Mamba SSM — architecture and efficiency',
+    description: 'Survey the Mamba state space model. How does selective state space replace attention? What parameter counts have been evaluated? What tasks does it excel at vs transformers?',
+    keywords: ['Mamba', 'state space model', 'SSM', 'selective scan'], arxivCats: ['cs.LG','cs.AI'],
+    testable: true, testClaim: 'Mamba 1.4B matches Transformer 3× larger in language modelling perplexity', claimType: 'benchmark_score' },
 
-const pathways=['PI3K/AKT/mTOR','RAS/RAF/MEK/ERK','JAK/STAT3','JAK/STAT5','Wnt/β-catenin canonical','Wnt non-canonical','Notch signaling','Hedgehog/GLI','Hippo/YAP/TAZ','NF-κB','TGF-β/SMAD','p53 pathway','Rb/E2F cell cycle','Homologous recombination repair','Non-homologous end joining','Mismatch repair','Base excision repair','Fanconi anemia pathway','G1/S checkpoint','G2/M checkpoint','Spindle assembly checkpoint','DNA replication stress','Intrinsic apoptosis','Extrinsic apoptosis','Autophagy','Ferroptosis','Pyroptosis','Necroptosis','Warburg effect','Glutamine metabolism','Fatty acid metabolism','One-carbon metabolism','VEGF/angiogenesis','Lymphangiogenesis','EMT — ZEB1/2, SNAIL, TWIST','cGAS-STING innate immunity','Toll-like receptor signaling','Interferon type I and II','Unfolded protein response','AMPK energy sensing','Calcium signaling','ROS signaling'];
-tasks.push(...expand('mol-bio','Molecular Biology','pathways','Signaling Pathways',pathways,['Pathway architecture and key nodes in TNBC','Activating alterations — mutations, amplifications','Crosstalk with other pathways','Therapeutic targeting — approved and investigational','Resistance through pathway rewiring','Biomarkers of pathway activation','Differences across TNBC subtypes','Preclinical models and key experiments','Clinical trial results','Combination and synthetic lethality'],'deep'));
+  { id: 'arch-002', division: 'architectures', title: 'RWKV — linear attention language model',
+    description: 'Research RWKV architecture. How does it achieve transformer-quality with RNN inference? What are smallest viable sizes? Parallelisable during training, linear during inference?',
+    keywords: ['RWKV', 'linear attention', 'RNN', 'receptance'], arxivCats: ['cs.CL','cs.LG'],
+    testable: true, testClaim: 'RWKV-4 1.5B runs inference on 8GB RAM CPU at competitive speed', claimType: 'inference_speed' },
 
-const hetero=['Intratumoral genetic heterogeneity','Clonal evolution during chemotherapy','Clonal evolution during immunotherapy','Single-cell DNA sequencing','Single-cell RNA sequencing atlases','Multi-region sequencing studies','Evolution from DCIS to invasive TNBC','Evolution primary to metastatic','Cancer stem cell models and markers','Plasticity and phenotype switching','Circulating tumor DNA mutation tracking','Whole genome doubling and chromosomal instability','Chromothripsis','Extrachromosomal DNA (ecDNA)','Copy number variation landscape','Mutational signatures — COSMIC, HRD, APOBEC','Drug-tolerant persister cells','Minimal residual disease characterization','Treatment-induced mutagenesis','Spatial heterogeneity mapping'];
-tasks.push(...expand('mol-bio','Molecular Biology','heterogeneity','Tumor Heterogeneity & Evolution',hetero,['Current evidence and key publications','Technologies and methodologies','Clinical implications for treatment','Implications for drug resistance','Biomarker applications','Future research priorities'],'deep'));
-return tasks;
-}
+  { id: 'arch-003', division: 'architectures', title: 'Phi series — small model data efficiency',
+    description: 'Survey Phi-1 through Phi-3.5. What training data strategies produce outsized capability at small scale? Which Phi model has best reasoning per parameter?',
+    keywords: ['Phi-3', 'small language model', 'data efficient', 'textbook quality'], arxivCats: ['cs.CL','cs.LG'],
+    testable: true, testClaim: 'Phi-3-mini-4k outperforms models 3× larger on MMLU', claimType: 'benchmark_score' },
 
-function divTME(){
-const tasks=[];
-const cells=['CD8+ cytotoxic T lymphocytes','CD4+ Th1 cells','CD4+ Th2 cells','CD4+ Th17 cells','T follicular helper cells','Regulatory T cells (FOXP3+)','γδ T cells','Tissue-resident memory T cells','Natural killer cells','NKT cells','Innate lymphoid cells ILC1/2/3','TAMs M1 polarized','TAMs M2 polarized','MDSC monocytic','MDSC granulocytic','cDC1','cDC2','Plasmacytoid dendritic cells','Tumor-associated neutrophils N1 vs N2','B cells and tertiary lymphoid structures','Plasma cells and antibody responses','Mast cells','Eosinophils','Basophils'];
-tasks.push(...expand('tme','Tumor Microenvironment','immune','Immune Cell Biology',cells,IMMUNE,'deep'));
+  { id: 'arch-004', division: 'architectures', title: 'Mixture of Experts — sparse inference for consumer hardware',
+    description: 'How do sparse MoE models activate only a fraction of parameters per token? What is minimum RAM to run Mixtral 8×7B? What quality loss vs dense equivalent?',
+    keywords: ['mixture of experts', 'sparse MoE', 'Mixtral', 'sparse activation'], arxivCats: ['cs.LG','cs.CL'],
+    testable: false },
 
-const checkpoints=['PD-1 biology and targeting','PD-L1 expression regulation and scoring','PD-L2 role vs PD-L1','CTLA-4 biology and ipilimumab','LAG-3 biology and relatlimab','TIM-3 biology and targeting','TIGIT biology and tiragolumab','VISTA biology and targeting','B7-H3 biology and enoblituzumab','B7-H4 biology','BTLA function','CD47/SIRPα dont-eat-me signal and magrolimab','CD39/CD73 adenosine pathway','IDO1/TDO2 tryptophan metabolism','ICOS co-stimulatory agonists','OX40 agonist antibodies','4-1BB agonist antibodies','GITR agonist antibodies','CD40 agonist antibodies','STING agonists'];
-tasks.push(...expand('tme','Tumor Microenvironment','checkpoints','Immune Checkpoints',checkpoints,['Molecular biology — ligands, receptors, signaling','Expression patterns in TNBC','Prognostic significance','Predictive value for immunotherapy','Drugs targeting this pathway','Combination with PD-1/PD-L1 blockade','Resistance mechanisms','Spatial distribution in tumors','Differences across TNBC subtypes','Emerging clinical data'],'deep'));
+  { id: 'arch-005', division: 'architectures', title: 'Quantization survey — GGUF, GPTQ, AWQ on consumer hardware',
+    description: 'Compare quantization methods for running large models on constrained hardware. Quality vs size tradeoff at 2/4/8-bit. Which method is best for CPU-only?',
+    keywords: ['quantization', 'GGUF', 'GPTQ', 'AWQ', '4-bit'], arxivCats: ['cs.LG','cs.AR'],
+    testable: true, testClaim: '4-bit quantization retains >95% benchmark performance vs FP16 baseline', claimType: 'benchmark_score' },
 
-const stroma=['Cancer-associated fibroblasts — subtypes myCAF iCAF apCAF','CAF origins and plasticity','ECM collagen remodeling','ECM stiffness and mechanotransduction','Matrix metalloproteinases MMP2 MMP9 MMP14','Hyaluronic acid accumulation','Fibronectin and integrin signaling','Tumor vasculature abnormalities and normalization','Pericyte biology','Vascular mimicry','Lymphatic vessels','Adipocyte-tumor crosstalk','Adipokines — leptin adiponectin','Nerve-tumor interactions and perineural invasion','Cancer-associated adipocytes','Mesenchymal stem cells in TME','Platelet-tumor interactions','Pre-metastatic niche formation','Exosomes and extracellular vesicles','Microbiome within TNBC tumors'];
-tasks.push(...expand('tme','Tumor Microenvironment','stroma','Stromal Biology',stroma,['Role in TNBC progression','Interaction with immune cells','Therapeutic targeting','Biomarker potential','Single-cell and spatial profiling','Preclinical models','Clinical correlations','Emerging research']));
+  { id: 'arch-006', division: 'architectures', title: 'Knowledge distillation — compressing capability into tiny models',
+    description: 'How is knowledge distilled from large teacher models to small students? Smallest model that retains useful reasoning via distillation? Task-specific vs general distillation?',
+    keywords: ['knowledge distillation', 'model compression', 'teacher student', 'DistilBERT'], arxivCats: ['cs.LG','cs.CL'],
+    testable: false },
 
-const cyto=['IL-1β','IL-2','IL-6','IL-8/CXCL8','IL-10','IL-12','IL-15','IL-17','IL-21','IL-33','TNF-α','IFN-γ','IFN-α/β','TGF-β1','TGF-β2','CXCL9','CXCL10','CXCL12/CXCR4','CCL2/CCR2','CCL5/CCR5','CCL22/CCR4','CXCL13/CXCR5','PGE2 and COX-2','Adenosine CD39/CD73','Lactate and acidic pH','Kynurenine/IDO pathway','Arginine/iNOS/arginase','Reactive oxygen species','Nitric oxide'];
-tasks.push(...expand('tme','Tumor Microenvironment','soluble','Cytokines & Metabolites',cyto,['Role in TNBC TME','Impact on immune cell function','Prognostic significance','Therapeutic targeting','Differences across subtypes','Interaction with checkpoint therapy']));
+  { id: 'arch-007', division: 'architectures', title: 'Weight sharing and parameter efficiency',
+    description: 'Survey ALBERT-style weight sharing, tied embeddings, and cross-layer parameter sharing. How much parameter reduction is achievable without capability loss?',
+    keywords: ['weight sharing', 'ALBERT', 'parameter efficient', 'layer tying'], arxivCats: ['cs.CL','cs.LG'],
+    testable: false },
 
-const spatial=['Multiplex immunofluorescence','Spatial transcriptomics Visium/10x','MERFISH single-molecule profiling','CosMx subcellular profiling','CODEX spatial proteomics','Imaging mass cytometry','Tertiary lymphoid structures architecture','Immune exclusion patterns — desert excluded inflamed','Tumor-immune interface biology','Perivascular immune niches','Spatial metabolomics MALDI','Digital pathology AI feature extraction'];
-tasks.push(...expand('tme','Tumor Microenvironment','spatial','Spatial Biology',spatial,['Technology and TNBC applications','Key findings and insights','Clinical translation','Integration with other omics','Limitations and improvements'],'deep'));
+  { id: 'arch-008', division: 'architectures', title: 'Flash Attention and memory-efficient attention',
+    description: 'How does Flash Attention reduce memory from O(n²) to O(n)? Does it enable running longer contexts on 16GB RAM? What is the practical gain for 7B models?',
+    keywords: ['flash attention', 'memory efficient', 'attention optimization', 'IO aware'], arxivCats: ['cs.LG','cs.PF'],
+    testable: true, testClaim: 'Flash Attention 2 enables 4× longer context on same GPU memory', claimType: 'memory_usage' },
 
-const hypoxia=['HIF-1α in TNBC','HIF-2α distinct roles','Hypoxia gene signatures','Hypoxia and angiogenesis','Hypoxia and immune suppression','Hypoxia and metabolic reprogramming','Hypoxia-driven chemo resistance','Hypoxia-driven radio resistance','Hypoxia-targeting therapies','Carbonic anhydrase IX biomarker'];
-tasks.push(...expand('tme','Tumor Microenvironment','hypoxia','Hypoxia Biology',hypoxia,['Molecular mechanisms','Clinical significance','Therapeutic implications','Imaging and measurement','Combination with immunotherapy']));
-return tasks;
-}
+  // ══════════════════════════════════════════════════
+  // DIVISION 2: TRAINING EFFICIENCY
+  // ══════════════════════════════════════════════════
 
-function divClinical(){
-const tasks=[];
-const drugs=['Pembrolizumab','Atezolizumab','Nivolumab','Durvalumab','Ipilimumab','Cemiplimab','Dostarlimab','Avelumab','Spartalizumab','Toripalimab','Sintilimab','Tislelizumab','Camrelizumab','Sugemalimab','Olaparib','Talazoparib','Niraparib','Rucaparib','Veliparib','Pamiparib','Fuzuloparib','Sacituzumab govitecan','Trastuzumab deruxtecan HER2-low','Datopotamab deruxtecan','Patritumab deruxtecan','Ladiratuzumab vedotin','Paclitaxel','Nab-paclitaxel','Docetaxel','Carboplatin','Cisplatin','Doxorubicin','Epirubicin','Cyclophosphamide','Capecitabine','Gemcitabine','Eribulin','Vinorelbine','Ixabepilone','5-Fluorouracil','Methotrexate','Bevacizumab','Ipatasertib','Capivasertib','Alpelisib','Everolimus','Enzalutamide for LAR','Bicalutamide for LAR','Trilaciclib','Inavolisib','Gedatolisib','AZD5305 next-gen PARP','Saruparib','Camonsertib ATR inhibitor','Adavosertib WEE1 inhibitor'];
-tasks.push(...expand('clinical','Clinical Therapeutics','drugs','Drug Analysis',drugs,DRUG,'deep'));
+  { id: 'train-001', division: 'training', title: 'LoRA and QLoRA — fine-tuning on consumer hardware',
+    description: 'How does Low-Rank Adaptation enable fine-tuning 7B+ models on 4GB VRAM? What tasks benefit most? What is the quality gap vs full fine-tuning?',
+    keywords: ['LoRA', 'QLoRA', 'PEFT', 'fine-tuning', 'low rank'], arxivCats: ['cs.LG','cs.CL'],
+    testable: true, testClaim: 'QLoRA can fine-tune a 7B model on a 4GB VRAM GPU with minimal quality loss', claimType: 'memory_usage' },
 
-const combos=['KEYNOTE-522 pembro+chemo neoadj/adj','KEYNOTE-355 pembro+chemo 1L met','IMpassion130 atezo+nab-pac','IMpassion131 atezo+pac','IMpassion132 atezo early TNBC','TORCHLIGHT toripalimab neoadj','GeparNuevo durva neoadj','I-SPY2 adaptive platform','CREATE-X adj capecitabine','OlympiA adj olaparib','OlympiAD olaparib vs chemo met','EMBRACA talazoparib vs chemo','ASCENT sacituzumab 2L+','TROPION-Breast01 dato-DXd','BEGONIA durva combinations','KEYLYNK-009 pembro+olaparib','TOPACIO niraparib+pembro','MEDIOLA durva+olaparib','IPATunity130 ipatasertib+pac','CAPItello-290 capivasertib+pac','LOTUS ipatasertib Ph2','PAKT capivasertib Ph2','ddAC-T dose-dense','Carboplatin+gemcitabine met','Bevacizumab+paclitaxel E2100','ENHANCE-1 eribulin+pembro','SACI-IO sacituzumab+pembro','CheckMate-7FL nivo neoadj','A-BRAVE avelumab adj','NeoTRIP atezo+carbo+nab-pac'];
-tasks.push(...expand('clinical','Clinical Therapeutics','combos','Combination Regimens & Named Trials',combos,TRIAL,'deep'));
+  { id: 'train-002', division: 'training', title: 'Chinchilla scaling laws — optimal size vs compute',
+    description: 'What do scaling laws say about optimal model size vs training tokens? Implications for building capable small models with limited compute budget?',
+    keywords: ['Chinchilla', 'scaling laws', 'compute optimal', 'training budget'], arxivCats: ['cs.LG','cs.AI'],
+    testable: false },
 
-const strategy=['First-line metastatic regimen selection','Second-line after chemo+ICI progression','Third-line and beyond evidence','BRCA-mutated PARP positioning','PD-L1 positive immunotherapy sequencing','PD-L1 negative treatment approach','Neoadjuvant regimen selection by stage','Adjuvant risk-adapted escalation/de-escalation','pCR and adjuvant de-escalation','Residual disease escalation strategies','Oligometastatic local therapy role','Brain metastasis treatment algorithm','ICI re-challenge after prior exposure','Maintenance therapy role','Treatment holidays and drug-free intervals','Elderly patients over 70','Very young patients under 30','Treatment during pregnancy','Performance status 2 approaches','HER2-low TNBC treatment implications'];
-tasks.push(...expand('clinical','Clinical Therapeutics','strategy','Treatment Strategy',strategy,['Current evidence and guidelines','Key trial data','Biomarker-guided decisions','Patient preference and SDM','Real-world practice patterns','Ongoing practice-changing trials']));
-return tasks;
-}
+  { id: 'train-003', division: 'training', title: 'Data quality over quantity — training small capable models',
+    description: 'How do high-quality curated datasets (SlimPajama, The Pile, FineWeb) enable small models to outperform larger models on noisier data? Best curation practices?',
+    keywords: ['data quality', 'data curation', 'FineWeb', 'SlimPajama', 'training data'], arxivCats: ['cs.CL','cs.LG'],
+    testable: false },
 
-function divSubtypes(){
-const tasks=[];
-const subs=['Basal-like 1 (BL1)','Basal-like 2 (BL2)','Immunomodulatory (IM)','Mesenchymal (M)','Mesenchymal stem-like (MSL)','Luminal androgen receptor (LAR)','Claudin-low','Interferon-rich subtype','HER2-low TNBC','HER2-ultralow TNBC','Apocrine subtype','Medullary breast cancer','Metaplastic breast cancer','Adenoid cystic carcinoma','Secretory breast cancer ETV6-NTRK3','Mixed/unclassifiable TNBC'];
-tasks.push(...expand('subtypes','TNBC Subtypes','subtypes','Subtype Biology',subs,['Molecular definition — gene expression mutations CN','Prevalence across populations','Immune landscape TILs PD-L1','Response to neoadjuvant chemo — pCR','Response to platinum chemotherapy','Response to immunotherapy','Response to PARP inhibitors','Response to targeted therapy','Prognosis — DFS and OS','Metastatic patterns by subtype','Metabolic profile','Single-cell heterogeneity','Subtype transition during treatment','Optimal treatment algorithm','PDX models for this subtype','Clinical trial enrichment strategies','Racial/ethnic subtype distribution','Subtype-specific biomarkers'],'deep'));
+  { id: 'train-004', division: 'training', title: 'Continual learning — avoiding catastrophic forgetting in local agents',
+    description: 'How can local AI agents learn from new interactions without forgetting prior knowledge? Survey EWC, replay buffers, progressive nets, and LoRA-based continual learning.',
+    keywords: ['continual learning', 'catastrophic forgetting', 'EWC', 'lifelong learning'], arxivCats: ['cs.LG','cs.AI'],
+    testable: false },
 
-const classSys=['Lehmann 2011 vs 2016 classifications','Burstein 2015 classification','PAM50 in TNBC','Consensus molecular subtypes','Single-cell vs bulk classification','Spatial intratumoral subtype mapping','Clinical utility of subtyping','Subtyping assay standardization'];
-tasks.push(...expand('subtypes','TNBC Subtypes','systems','Classification Systems',classSys,['Methodology and original publication','Validation across cohorts','Concordance across systems','Clinical actionability','Limitations and improvements']));
-return tasks;
-}
+  { id: 'train-005', division: 'training', title: 'RLHF and RLAIF at small scale',
+    description: 'Can RLHF / RLAIF alignment techniques be applied to sub-7B models? What is the minimum scale for effective preference learning? DPO vs PPO for small models?',
+    keywords: ['RLHF', 'RLAIF', 'DPO', 'PPO', 'alignment small model'], arxivCats: ['cs.LG','cs.CL','cs.AI'],
+    testable: false },
 
-function divMetastasis(){
-const tasks=[];
-const sites=['Brain metastasis','Leptomeningeal carcinomatosis','Lung metastasis','Pleural effusion/carcinomatosis','Liver metastasis','Bone metastasis osteolytic','Skin and chest wall recurrence','Contralateral breast','Distant lymph nodes','Peritoneal carcinomatosis','Adrenal metastasis','Ovarian metastasis'];
-tasks.push(...expand('metastasis','Metastasis','sites','Site-Specific Metastasis',sites,['Incidence and timing','Molecular drivers of tropism','Pre-metastatic niche formation','Systemic treatment options','Local therapy role','Blood-organ barrier challenges','Predictive biomarkers','Surveillance strategies','Quality of life management','Oligometastatic curative intent','Emerging site-specific therapies','Primary vs metastatic molecular evolution','Median survival and prognostic factors','Current trial landscape']));
+  // ══════════════════════════════════════════════════
+  // DIVISION 3: REASONING & INTELLIGENCE
+  // ══════════════════════════════════════════════════
 
-const bio=['Circulating tumor cells detection and characterization','CTC clusters enhanced metastatic potential','ctDNA monitoring metastatic burden','EMT molecular program','MET at metastatic site','Cancer stem cells metastasis-initiating','Tumor dormancy mechanisms','Dormancy reactivation triggers','Disseminated tumor cells in bone marrow','Micrometastasis detection','Seed and soil molecular underpinnings','Mechanical forces and fluid shear stress','Platelet-cancer cell coating','Neutrophil extracellular traps','Lymphatic vs hematogenous routes','Exosome-mediated niche preparation','Organotropism determinants','Immune evasion during cascade','Metabolic adaptation at metastatic sites','ECM remodeling LOX fibronectin','Macrophage-assisted metastasis','Astrocyte interactions brain met','Osteoclast RANKL bone met','Hepatocyte interactions liver met','Angiogenic switch at secondary sites'];
-tasks.push(...expand('metastasis','Metastasis','biology','Metastasis Biology',bio,['Molecular mechanisms','TNBC-specific data','Therapeutic targeting','Biomarker applications','Key preclinical models','Clinical translation status'],'deep'));
-return tasks;
-}
+  { id: 'reason-001', division: 'reasoning', title: 'Chain-of-thought prompting in small models',
+    description: 'Does CoT prompting improve reasoning in sub-7B models? At what parameter count does it become reliably effective? Survey empirical results across model families.',
+    keywords: ['chain of thought', 'CoT', 'reasoning', 'prompting', 'small model'], arxivCats: ['cs.CL','cs.AI'],
+    testable: true, testClaim: 'CoT prompting improves GSM8K scores in 3B+ parameter models', claimType: 'benchmark_score' },
 
-function divBiomarkers(){
-const tasks=[];
-const markers=['PD-L1 SP142 assay','PD-L1 22C3/TPS','PD-L1 CPS','PD-L1 SP263','TILs stromal','TILs intratumoral','BRCA1/2 germline','BRCA1/2 somatic','HRD Myriad MyChoice','HRD FoundationOne LOH','Tumor mutational burden TMB','Microsatellite instability MSI','Ki-67 proliferation index','Androgen receptor expression','Trop-2 expression','HER2 IHC 0 vs 1+ vs 2+','Nectin-4 expression','Folate receptor alpha','ctDNA dynamics early response','ctDNA MRD detection','CTC CellSearch enumeration','PAM50/Prosigna in TNBC','Immune gene signatures T cell GEP','PIK3CA mutation status','PTEN loss IHC and genomic','TP53 mutation type GOF vs null','NLR neutrophil-lymphocyte ratio','Platelet-lymphocyte ratio PLR','Serum LDH','Pathological complete response as biomarker','Residual Cancer Burden RCB score','Body mass index impact','Serum albumin'];
-tasks.push(...expand('biomarkers','Biomarkers & Diagnostics','markers','Biomarker Analysis',markers,['Analytical validity and methodology','Clinical validity outcomes association','Clinical utility treatment impact','Predictive value for specific therapies','Prognostic value independent of treatment','Scoring systems and cut-offs','Interlaboratory concordance','Spatial and temporal heterogeneity','Integration into guidelines NCCN ASCO ESMO','Multi-marker panels','Cost-effectiveness','Next-generation assays']));
+  { id: 'reason-002', division: 'reasoning', title: 'Test-time compute scaling — thinking longer vs bigger models',
+    description: 'Can small models with extended inference-time compute (o1-style, beam search, MCTS) match larger models? What open implementations exist for local use?',
+    keywords: ['test time compute', 'inference scaling', 'o1', 'reasoning budget', 'MCTS'], arxivCats: ['cs.AI','cs.LG'],
+    testable: false },
 
-const tech=['NGS panels FoundationOne MSK-IMPACT','Whole genome sequencing','Whole exome sequencing','RNA-seq molecular subtyping','Single-cell RNA-seq clinical apps','Liquid biopsy Guardant360 FoundationOne Liquid','Digital PCR ddPCR for ctDNA','Methylation early detection GRAIL Galleri','Multi-cancer early detection MCED','Proteomics mass spec clinical','Metabolomics profiling','Multiplex immunofluorescence','Flow cytometry and CyTOF','Digital pathology whole slide imaging','AI deep learning H&E pathology','AI mammography screening','AI MRI molecular subtyping','Contrast-enhanced mammography','Breast MRI diffusion weighted','FDG-PET staging and response','Novel PET tracers FES FLT immune','Ultrasound elastography','Molecular breast imaging','CTC single-cell sequencing','Circulating exosome profiling'];
-tasks.push(...expand('biomarkers','Biomarkers & Diagnostics','technology','Diagnostic Technologies',tech,['Technology description','TNBC evidence','Clinical validation','Comparison with standard','Cost and accessibility','Future directions']));
-return tasks;
-}
+  { id: 'reason-003', division: 'reasoning', title: 'Emergent abilities in small models — threshold and induction',
+    description: 'At what parameter scale do emergent reasoning abilities appear? Can curriculum learning or synthetic data induce emergent reasoning below 7B? What does recent literature say?',
+    keywords: ['emergent abilities', 'phase transition', 'small LLM', 'capability threshold'], arxivCats: ['cs.LG','cs.AI'],
+    testable: false },
 
-function divPopulation(){
-const tasks=[];
-const pops=['African American/Black women','Hispanic/Latina women','Non-Hispanic White women','East Asian women','South Asian women','Southeast Asian women','Middle Eastern women','Sub-Saharan African women','Caribbean women','Indigenous North American women','Ashkenazi Jewish women','Women under 35','Women 35-50','Women 50-65','Women over 70','Male breast cancer TNBC','Pregnant and postpartum women','BRCA1 carriers','BRCA2 carriers','PALB2 carriers','Li-Fraumeni syndrome'];
-tasks.push(...expand('population','Population & Disparities','demographics','Demographics',pops,['TNBC incidence and prevalence','Stage at diagnosis and screening','Molecular features subtype distribution','Treatment access and patterns','Clinical trial representation','Survival outcomes DFS and OS','Socioeconomic factors','Genetic ancestry and genomic differences','Cultural factors affecting care','Interventions to improve outcomes']));
+  { id: 'reason-004', division: 'reasoning', title: 'Tool use and function calling in small models',
+    description: 'How well do sub-7B models handle structured tool use, JSON function schemas, and agentic tasks? Which architectures support this natively vs via fine-tuning?',
+    keywords: ['tool use', 'function calling', 'JSON schema', 'agentic LLM'], arxivCats: ['cs.CL','cs.AI'],
+    testable: true, testClaim: 'Mistral 7B Instruct reliably follows JSON function calling schemas', claimType: 'model_capability' },
 
-const countries=['United States','Canada','United Kingdom','Germany','France','Italy','Spain','Netherlands','Sweden','Japan','South Korea','China','India','Australia','Brazil','Mexico','Nigeria','South Africa','Kenya','Egypt','Saudi Arabia','Turkey','Russia','Indonesia','Colombia'];
-tasks.push(...expand('population','Population & Disparities','geographic','Geographic Epidemiology',countries,['TNBC incidence trends 20 years','Treatment guidelines and SOC','Clinical trial participation','Survival outcomes healthcare factors','Population-specific genomic variants','Access to molecular testing and targeted therapy']));
+  { id: 'reason-005', division: 'reasoning', title: 'Planning and multi-step task execution — ReAct, Reflexion, ToT',
+    description: 'Survey ReAct, Reflexion, tree-of-thoughts, and similar frameworks. Minimum model size for reliable multi-step planning? How do they perform on constrained hardware?',
+    keywords: ['ReAct', 'Reflexion', 'tree of thoughts', 'LLM planning', 'agentic'], arxivCats: ['cs.AI','cs.CL'],
+    testable: false },
 
-const structural=['Insurance status and uninsured patients','Medicaid vs private insurance outcomes','Rural vs urban disparities','Travel distance to cancer centers','Poverty and deprivation indices','Education and health literacy','Language barriers','Implicit bias in clinical decisions','Academic vs community center referrals','Time symptom to diagnosis delays by race','Time diagnosis to treatment initiation','Guideline-concordant treatment disparities','Clinical trial accrual barriers','Patient navigation programs','Community health worker interventions'];
-tasks.push(...expand('population','Population & Disparities','structural','Structural Determinants',structural,['Evidence of disparities','Impact on outcomes','Successful interventions','Policy recommendations','Gaps in evidence']));
-return tasks;
-}
+  { id: 'reason-006', division: 'reasoning', title: 'Self-improvement and meta-learning in small models',
+    description: 'What is the current state of models that improve via self-play, self-correction, or STaR (self-taught reasoning)? What scale is required? Theoretical limits?',
+    keywords: ['self improvement', 'STaR', 'self play', 'meta learning', 'self correction'], arxivCats: ['cs.LG','cs.AI'],
+    testable: false },
 
-function divPrevention(){
-const tasks=[];
-const topics=['BRCA1 genetic counseling guidelines','BRCA2 genetic counseling guidelines','Multi-gene panel testing yield','Polygenic risk scores for TNBC','Risk models Tyrer-Cuzick BOADICEA','Cascade testing family members','Direct-to-consumer genetic testing','Prophylactic bilateral mastectomy outcomes','Prophylactic salpingo-oophorectomy','Risk-reducing salpingectomy delayed oophorectomy','Tamoxifen chemoprevention limited TNBC role','Aspirin/NSAID COX-2 and TNBC risk','Metformin diabetes and TNBC','Statins cholesterol and TNBC','Vitamin D supplementation evidence','Retinoids differentiation prevention','Obesity BMI and TNBC risk','Weight loss interventions','Physical activity dose-response','Alcohol consumption by subtype','Dietary patterns Western vs Mediterranean','Soy phytoestrogens and TNBC','Breastfeeding duration and risk','Parity and age at first birth','Oral contraceptive use and TNBC','Shift work circadian disruption','Stress psychoneuroimmunology','Endocrine disruptors BPA phthalates','Pesticide exposure','Ionizing radiation exposure','Air pollution PM2.5','Mammographic density risk','Dense breast notification laws','Supplemental MRI screening high-risk','AI-enhanced mammographic screening','Interval cancers TNBC overrepresentation','Screening frequency optimization','Novel blood early detection Galleri CancerSEEK','cfDNA methylation early detection','Protein biomarker panels early detection','Autoantibody panels detection','Microbiome as early detection biomarker','Breast self-exam and clinical exam evidence'];
-tasks.push(...expand('prevention','Prevention & Early Detection','prevention','Risk & Detection',topics,['Current evidence synthesis','Strength of evidence quality','Population-specific data','Clinical guidelines','Gaps and research priorities']));
-return tasks;
-}
+  // ══════════════════════════════════════════════════
+  // DIVISION 4: MEMORY SYSTEMS
+  // ══════════════════════════════════════════════════
 
-function divResistance(){
-const tasks=[];
-const mech=['ABC transporter P-glycoprotein MDR1','ABC transporter BCRP ABCG2','Drug metabolism CYP450 upregulation','Tubulin mutations taxane resistance','DNA repair upregulation platinum resistance','Topoisomerase II anthracycline resistance','Anti-apoptotic BCL-2 MCL-1 BCL-XL upregulation','Autophagy-mediated survival','Cancer stem cell enrichment','Tumor heterogeneity clonal selection','Hypoxia-driven chemoresistance','ECM-mediated CAF protection','Drug pharmacokinetic sanctuary sites','Primary resistance to PD-1/PD-L1','Acquired resistance to PD-1/PD-L1','MHC-I downregulation antigen presentation loss','B2M loss','JAK1/JAK2 mutations IFN-γ deficiency','STK11/LKB1 loss immunotherapy resistance','KEAP1 mutation immune cold','WNT/β-catenin T cell exclusion','PTEN loss immunosuppressive TME','TGF-β immune exclusion','Alternative checkpoint upregulation LAG-3 TIM-3','Adenosine CD39/CD73 immunosuppression','MDSC accumulation','Treg expansion','Metabolic competition glucose depletion','Neoantigen loss immune editing','BRCA reversion mutations PARP resistance','HR restoration PARP resistance','53BP1/RIF1 pathway rewiring','PARP1 mutations reducing trapping','Replication fork stabilization','ABCB1 upregulation PARP efflux','SLFN11 loss PARP resistance','Metabolic reprogramming under therapy','EMT-driven pan-resistance','Epigenetic drug-tolerant persister cells','Exosome-mediated resistance transfer','Microenvironment paracrine resistance'];
-tasks.push(...expand('resistance','Drug Resistance','mechanisms','Resistance Mechanisms',mech,['Molecular mechanism','Clinical evidence in TNBC','Detection and biomarkers','Strategies to overcome','Preclinical models','Combination approaches','Ongoing trials targeting this','Frequency and timing of emergence'],'deep'));
-return tasks;
-}
+  { id: 'mem-001', division: 'memory', title: 'RAG for local agents — vector stores on constrained hardware',
+    description: 'How does RAG extend effective knowledge of small models? Best local vector stores (ChromaDB, FAISS, SQLite-VSS) for 16GB RAM machines? Chunking strategies?',
+    keywords: ['RAG', 'retrieval augmented', 'ChromaDB', 'FAISS', 'local vector store'], arxivCats: ['cs.IR','cs.CL'],
+    testable: true, testClaim: 'ChromaDB or FAISS runs efficiently for RAG on 16GB RAM with sub-100ms retrieval', claimType: 'inference_speed' },
 
-function divEmerging(){
-const tasks=[];
-const topics=['mRNA neoantigen vaccines BioNTech Moderna','Personalized neoantigen peptide vaccines','Dendritic cell vaccines','Whole-cell tumor vaccines GVAX','Viral vector vaccines adenovirus MVA','DNA vaccines electroporation','In situ vaccination intratumoral','CAR-T targeting Trop-2','CAR-T targeting MUC1','CAR-T targeting EGFR','CAR-T targeting mesothelin','CAR-NK cells for TNBC','CAR-macrophages CAR-M','TIL therapy Iovance','Gamma-delta T cell therapy','Bispecific T cell engagers BiTEs','Bispecific checkpoint antibodies','Trispecific antibodies','Next-gen ADC payloads topo1 PBD MMAE','Bispecific ADCs dual targeting','Conditional TME-activated ADCs','Radioligand therapy lutetium-177','CRISPR therapeutic applications','CRISPR vulnerability screens','Antisense oligonucleotides','siRNA lipid nanoparticle delivery','Oncolytic herpes simplex virus','Oncolytic adenovirus enadenotucirev','Oncolytic reovirus pelareorep','PROTACs protein degradation','Molecular glues cereblon modulators','CDK2 inhibitors','CDK7 inhibitors','CDK9 inhibitors','MDM2 inhibitors','BRD4/BET degraders','SHP2 inhibitors','SOS1 inhibitors','Photodynamic therapy','Photothermal therapy','Focused ultrasound drug delivery','Cryoablation systemic immune effects','Tumor treating fields TTFields','Nanoparticle drug delivery liposomal polymeric','Exosome-based drug delivery','Gold nanoparticles theranostics','Patient-derived organoids drug testing','PDX clinical co-trials','Digital twins treatment simulation','Liquid biopsy-guided adaptive therapy','AI-driven drug repurposing','Synthetic lethality beyond BRCA/PARP','Microbiome manipulation FMT probiotics','Metabolic therapy metformin dichloroacetate','Epigenetic combination therapy','Ferroptosis induction therapy','Senolytic therapy','Antibody-drug conjugate resistance strategies'];
-tasks.push(...expand('emerging','Emerging Science','emerging','Emerging Therapeutics',topics,['Technology overview and mechanism','Preclinical evidence in TNBC','Clinical trial status and results','Manufacturing scalability cost','Comparison with standard approaches','Patient selection biomarkers','Regulatory pathway and timeline','Combination potential','Risks limitations failures','Expert opinion and outlook']));
-return tasks;
-}
+  { id: 'mem-002', division: 'memory', title: 'Long context vs RAG — tradeoffs for local inference',
+    description: 'Is a 128k context window better than RAG for local agents? Compute cost of long context on CPU inference? When does each approach win?',
+    keywords: ['long context', '128k context', 'RAG vs context', 'KV cache'], arxivCats: ['cs.CL','cs.LG'],
+    testable: false },
 
-function divSurgRad(){
-const tasks=[];
-const topics=['BCS vs mastectomy TNBC outcomes','Oncoplastic BCS techniques','Skin-sparing mastectomy','Nipple-sparing mastectomy safety in TNBC','Contralateral prophylactic mastectomy evidence','Sentinel lymph node biopsy accuracy TNBC','Axillary dissection de-escalation after NAC','Targeted axillary dissection TAD','ACOSOG Z0011 TNBC applicability','AMAROS radiation vs surgery positive SLN','Neoadjuvant response guiding surgery','pCR and omission of surgery NRG BR005','Margin assessment intraoperative','Margin width no tumor on ink debate','Immediate vs delayed reconstruction','Implant-based reconstruction complications','Autologous DIEP TRAM latissimus','Reconstruction and radiation sequencing','Surgical local recurrence management','Surgery for oligometastatic liver lung','Neurosurgical brain metastases resection','Whole breast radiation standard fractionation','Hypofractionated FAST FAST-Forward','Ultra-hypofractionated 5 fractions','Accelerated partial breast irradiation','Radiation omission after BCS favorable cases','Post-mastectomy radiation PMRT','Regional nodal irradiation','SUPREMO trial PMRT intermediate risk','Proton therapy cardiac sparing','SBRT for oligometastases','SRS for brain metastases vs WBRT','Whole brain radiation neurocognitive concerns','Re-irradiation local recurrence','Intraoperative radiation IORT','Radiation immunotherapy abscopal effect','Radiation PARP inhibitor radiosensitization','Radiation timing concurrent vs sequential','Radiation genomics predicting sensitivity','Cardiac toxicity from radiation','Radiation secondary malignancies','Lymphedema from radiation prevention'];
-tasks.push(...expand('surgery-rad','Surgery & Radiation','surgery-rad','Local-Regional Therapy',topics,['Current evidence and trials','TNBC-specific considerations','Patient selection','Outcomes — control cosmesis QoL','Integration with systemic therapy','Ongoing trials and future']));
-return tasks;
-}
+  { id: 'mem-003', division: 'memory', title: 'Episodic and semantic memory for persistent local agents',
+    description: 'How do cognitive-science-inspired memory architectures (episodic, semantic, procedural) map to LLM agent systems? What implementations are most practical for local use?',
+    keywords: ['episodic memory', 'semantic memory', 'agent memory', 'cognitive architecture'], arxivCats: ['cs.AI','cs.LG'],
+    testable: false },
 
-function divSupportive(){
-const tasks=[];
-const topics=['Chemotherapy-induced peripheral neuropathy','CINV antiemetic protocols','Neutropenia febrile neutropenia G-CSF','Anemia EPO agents transfusion','Cardiotoxicity anthracyclines monitoring','irAE organ-specific management overview','ICI pneumonitis','ICI colitis','ICI hepatitis','ICI thyroiditis endocrinopathies','ICI dermatitis','ICI myocarditis','PARP inhibitor MDS/AML risk','ADC toxicity sacituzumab','Alopecia scalp cooling','Mucositis stomatitis','Hand-foot syndrome capecitabine','Bone health osteoporosis','Arthralgias myalgias','Fertility preservation oocyte embryo','Ovarian tissue cryopreservation','GnRH agonist ovarian protection','Fertility after TNBC treatment','Pregnancy after TNBC safety timing','BRCA genetic counseling family planning','Depression prevalence screening','Anxiety health-related','Fear of recurrence interventions','PTSD and post-traumatic growth','Body image sexuality mastectomy','Cognitive dysfunction chemobrain','Sleep disturbances insomnia','Psychosocial support therapy','MBSR mindfulness evidence','Digital mental health apps telehealth','Fatigue multifactorial management','Pain multimodal opioid-sparing','Lymphedema risk reduction detection treatment','Exercise during treatment safety benefits','Exercise after treatment survivorship','Yoga integrative movement evidence','Nutritional support during treatment','Weight management survivorship','Survivorship care planning models','Long-term surveillance imaging','Second primary cancer risk','Cardiovascular late effects monitoring','Return to work barriers facilitators','Financial toxicity interventions','Caregiver burden assessment support','Early palliative care integration Temel','Goals of care metastatic TNBC','Symptom management advanced disease','Hospice utilization racial disparities','End-of-life decision making','Advance care planning barriers'];
-tasks.push(...expand('supportive','Supportive Care & Survivorship','supportive','Patient Care',topics,['Evidence synthesis and guidelines','TNBC-specific considerations','Validated assessment tools','Evidence-based interventions','Patient-reported outcomes','Disparities in access']));
-return tasks;
-}
+  // ══════════════════════════════════════════════════
+  // DIVISION 5: MULTI-AGENT SYSTEMS
+  // ══════════════════════════════════════════════════
 
-function divPreclinical(){
-const tasks=[];
-const topics=['MDA-MB-231 characterization','MDA-MB-468 characterization','BT-549 characterization','Hs578T characterization','HCC1937 BRCA1-mutant','HCC1806','SUM149PT','SUM159PT','CAL-51','CAL-120','Cell line panel TNBC subtype representation','Cell line vs primary tumor genomic fidelity','MMTV-PyMT mouse model','C3(1)-Tag mouse model','BRCA1-conditional knockout models','4T1 syngeneic model metastasis immunology','E0771 syngeneic model','EMT6 syngeneic model','Humanized mouse models immune reconstitution','PDX establishment characterization banking','PDX clinical co-trials response prediction','Orthotopic vs subcutaneous relevance','Spontaneous vs experimental metastasis models','Brain metastasis intracardiac model','3D spheroid drug screening','Patient-derived organoids establishment','Organoid drug sensitivity clinical correlation','Tumor-on-a-chip microfluidic','Bioprinted tumor models','Co-culture tumor plus immune cells','Co-culture tumor plus CAFs','In silico drug screening','ML TNBC outcome prediction','Deep learning histopathology','Network pharmacology multi-target','Mathematical modeling tumor growth','Agent-based modeling tumor evolution','CRISPR genome-wide screens','CRISPR in vivo screens','shRNA/siRNA functional screens','Drug combination high-throughput screens','Systematic review methodology oncology','Meta-analysis methodology','Network meta-analysis indirect comparisons','GRADE evidence quality','CONSORT STROBE PRISMA reporting','pCR as surrogate for EFS/OS debate','RWE electronic health records','Propensity score matching','Bayesian adaptive trial designs','Genomic multiple testing correction'];
-tasks.push(...expand('preclinical','Preclinical Models & Methodology','models','Research Models & Methods',topics,['Characterization and validation','Strengths and limitations','Key discoveries using this','Comparison with alternatives','Best practice recommendations','Next generation improvements']));
-return tasks;
-}
+  { id: 'multi-001', division: 'multiagent', title: 'Multi-agent LLM coordination patterns',
+    description: 'Survey debate, peer-review, consensus, and specialised agent patterns. How do they improve quality over single agents? What coordination overhead on local hardware?',
+    keywords: ['multi-agent LLM', 'agent debate', 'peer review agent', 'swarm AI'], arxivCats: ['cs.MA','cs.AI'],
+    testable: false },
 
-function divPolicy(){
-const tasks=[];
-const topics=['Cost of TNBC treatment by stage and regimen','Cost-effectiveness pembrolizumab KEYNOTE-522','Cost-effectiveness sacituzumab ASCENT','Cost-effectiveness olaparib OlympiA','Cost-effectiveness BRCA testing population vs targeted','Cost-effectiveness ctDNA MRD testing','Financial toxicity patient burden','Value frameworks ASCO ESMO ICER NCCN','Drug pricing oncology trends','Biosimilar development','Generic chemo supply chain','Global access immunotherapy LMIC','Global access PARP inhibitors','Global access ADCs','Health technology assessment by country','NICE UK TNBC drug appraisals','PBAC Australia reimbursement','CADTH Canada evaluations','Patent landscape key TNBC drugs','Patient assistance programs','Clinical trial diversity FDA requirements','FDA accelerated approval TNBC drugs','EMA conditional approval','RWE for regulatory decisions','Patient advocacy TNBC Foundation Living Beyond'];
-tasks.push(...expand('policy','Health Economics & Policy','policy','Policy & Access',topics,['Current evidence and data','Impact on patient outcomes access','International comparison','Recommendations for improvement','Gaps in evidence']));
-return tasks;
-}
+  { id: 'multi-002', division: 'multiagent', title: 'Society of Mind and modular AI architectures',
+    description: 'Modular systems where specialist sub-agents collaborate vs monolithic large models. Minimum per-agent capability for useful contribution? Routing and orchestration overhead?',
+    keywords: ['society of mind', 'modular AI', 'specialist agents', 'mixture of agents'], arxivCats: ['cs.AI','cs.MA'],
+    testable: false },
 
-function divQC(totalNonQC){
-const tasks=[];
-const vb=Math.min(Math.ceil(totalNonQC*0.10),800);
-const cb=Math.min(Math.ceil(totalNonQC*0.03),250);
-const sb=Math.min(Math.ceil(totalNonQC*0.02),150);
-for(let i=0;i<vb;i++)tasks.push(t('qc','Quality Control','verification','Citation Verification',`Verify finding citations batch ${i+1}: check DOIs resolve, methodology quality, statistical rigor, claims match source`,['citation','verification','DOI']));
-for(let i=0;i<cb;i++)tasks.push(t('qc','Quality Control','contradictions','Contradiction Resolution',`Cross-reference findings batch ${i+1}: identify conflicts between divisions, assess methodological strength, note unresolved debates`,['contradiction','cross-reference','evidence'],'deep'));
-for(let i=0;i<sb;i++)tasks.push(t('qc','Quality Control','synthesis','Cross-Division Synthesis',`Synthesize findings batch ${i+1}: connect molecular, clinical, and population insights to identify actionable research priorities`,['synthesis','cross-division','integration'],'deep'));
-return tasks;
-}
+  { id: 'multi-003', division: 'multiagent', title: 'Agent communication protocols — structured vs natural language',
+    description: 'What communication formats (JSON, NL, blackboard) work best for local agent swarms? Latency, reliability, and interpretability tradeoffs?',
+    keywords: ['agent communication', 'A2A protocol', 'blackboard system', 'inter-agent'], arxivCats: ['cs.MA','cs.AI'],
+    testable: false },
 
-function getAllMissions(){
-taskCount=0;
-const allTasks=[...divMolBio(),...divTME(),...divClinical(),...divSubtypes(),...divMetastasis(),...divBiomarkers(),...divPopulation(),...divPrevention(),...divResistance(),...divEmerging(),...divSurgRad(),...divSupportive(),...divPreclinical(),...divPolicy()];
-const nonQC=allTasks.length;
-allTasks.push(...divQC(nonQC));
-console.log(`   TNBC Mission: ${allTasks.length} tasks across 16 divisions`);
-return[{
-  id:'tnbc-001',
-  name:'Triple-Negative Breast Cancer (TNBC)',
-  description:'The most comprehensive systematic analysis of TNBC ever attempted. 16 research divisions covering molecular biology (120+ genes, 42 pathways, 32 epigenetic mechanisms), tumor microenvironment (24 immune cell types, 20 checkpoints, 29 cytokines), clinical therapeutics (55 drugs, 30 named trials, 20 treatment strategies), 16 TNBC subtypes, metastasis (12 sites, 25 mechanisms), biomarkers (33 markers, 25 technologies), population disparities (21 demographics, 25 countries), prevention (43 risk factors), drug resistance (41 mechanisms), emerging science (58 technologies), surgery & radiation (42 topics), supportive care (56 topics), preclinical models (50 systems), and health economics (25 topics). Every finding requires cited evidence.',
-  phase:'research',
-  totalTasks:allTasks.length,
-  config:{priority:1},
-  tasks:allTasks,
-}];
-}
-module.exports={getAllMissions};
+  // ══════════════════════════════════════════════════
+  // DIVISION 6: LOCAL DEPLOYMENT
+  // What actually runs on consumer hardware
+  // ══════════════════════════════════════════════════
+
+  { id: 'local-001', division: 'local_deployment', title: 'llama.cpp — state of CPU inference',
+    description: 'What models run well via llama.cpp on CPU with 16GB RAM? Realistic tok/s speeds by quantization level? GPU layer offloading with 4GB VRAM on llama.cpp?',
+    keywords: ['llama.cpp', 'CPU inference', 'quantized inference', 'consumer LLM'], arxivCats: ['cs.LG','cs.PF'],
+    testable: true, testClaim: 'Llama 3.2 3B Q4_K_M runs at >10 tok/s on i7 CPU with 16GB RAM', claimType: 'inference_speed' },
+
+  { id: 'local-002', division: 'local_deployment', title: 'Ollama — practical local model serving',
+    description: 'How does Ollama simplify local model deployment? Model library, API surface, performance vs raw llama.cpp? Resource use for simultaneous model serving?',
+    keywords: ['Ollama', 'local model serving', 'personal AI', 'model management'], arxivCats: ['cs.LG'],
+    testable: true, testClaim: 'Ollama serves 7B model with <4s first-token latency on 16GB RAM', claimType: 'inference_speed' },
+
+  { id: 'local-003', division: 'local_deployment', title: 'GPU offloading — GTX 1050 4GB + 16GB RAM hybrid',
+    description: 'When is partial GPU offloading on a 4GB VRAM GPU beneficial vs pure CPU? How many layers can be offloaded? What is the practical speed gain for 7B models?',
+    keywords: ['GPU offloading', 'hybrid inference', 'VRAM constraint', 'partial GPU'], arxivCats: ['cs.LG','cs.AR'],
+    testable: true, testClaim: 'Offloading 10 layers to GTX 1050 4GB meaningfully improves 7B inference speed vs CPU-only', claimType: 'inference_speed' },
+
+  { id: 'local-004', division: 'local_deployment', title: 'HDD vs SSD — storage impact on model loading',
+    description: 'How much does HDD vs SSD storage affect LLM cold-load times? For a 4GB GGUF model, what is the load time difference? Does memory-mapped loading help on HDD?',
+    keywords: ['model loading', 'HDD inference', 'mmap', 'storage bottleneck', 'cold start'], arxivCats: ['cs.PF','cs.AR'],
+    testable: true, testClaim: 'HDD storage causes 3-5× longer model cold-load time vs SSD for GGUF models', claimType: 'inference_speed' },
+
+  { id: 'local-005', division: 'local_deployment', title: 'Power and thermal limits for continuous local AI on laptop',
+    description: 'Power draw and thermal implications of continuous LLM inference on a laptop. Throttling effects. Sustainable inference rate for an always-on local AI agent.',
+    keywords: ['power consumption', 'thermal throttling', 'laptop inference', 'TDP', 'sustainable AI'], arxivCats: ['cs.PF','cs.AR'],
+    testable: false },
+
+  // ══════════════════════════════════════════════════
+  // DIVISION 7: VISION MODELS
+  // Local multimodal — vision
+  // ══════════════════════════════════════════════════
+
+  { id: 'vision-001', division: 'vision', title: 'LLaVA series — open vision-language models',
+    description: 'Survey LLaVA 1.0 through LLaVA-NeXT. Architecture, training, benchmark performance. Smallest viable LLaVA for useful vision understanding on 16GB RAM?',
+    keywords: ['LLaVA', 'vision language model', 'VLM', 'multimodal LLM'], arxivCats: ['cs.CV','cs.CL'],
+    testable: true, testClaim: 'LLaVA 1.6 7B runs inference on 16GB RAM with GPU offloading', claimType: 'memory_usage' },
+
+  { id: 'vision-002', division: 'vision', title: 'Moondream and MiniCPM-V — sub-3B vision models',
+    description: 'Survey Moondream (1-2B) and MiniCPM-V. How much vision capability survives at tiny scale? What tasks are feasible? Real-world use on CPU-only machines?',
+    keywords: ['Moondream', 'MiniCPM-V', 'tiny VLM', 'efficient vision LLM'], arxivCats: ['cs.CV','cs.CL'],
+    testable: true, testClaim: 'Moondream 2B provides useful image description on CPU with 8GB RAM', claimType: 'model_capability' },
+
+  { id: 'vision-003', division: 'vision', title: 'Phi-3-vision and PaliGemma — vision designed for constrained hardware',
+    description: 'How do Phi-3-vision and PaliGemma achieve good vision-language performance at small scale? Architecture choices that enable efficiency? Benchmark comparisons?',
+    keywords: ['Phi-3-vision', 'PaliGemma', 'efficient VLM', 'small multimodal'], arxivCats: ['cs.CV','cs.CL'],
+    testable: true, testClaim: 'Phi-3-vision scores competitively on VQA benchmarks at 4B parameters', claimType: 'benchmark_score' },
+
+  { id: 'vision-004', division: 'vision', title: 'Vision encoders — CLIP, SigLIP, and variants for local use',
+    description: 'How do vision encoders (CLIP, SigLIP, DINOv2) work as the visual frontend for VLMs? What encoder size is needed for useful performance? Can encoders run CPU-only?',
+    keywords: ['CLIP', 'SigLIP', 'vision encoder', 'DINOv2', 'image embedding'], arxivCats: ['cs.CV','cs.LG'],
+    testable: false },
+
+  // ══════════════════════════════════════════════════
+  // DIVISION 8: VOICE MODELS
+  // Local multimodal — audio
+  // ══════════════════════════════════════════════════
+
+  { id: 'voice-001', division: 'voice', title: 'Whisper and Whisper.cpp — speech recognition on CPU',
+    description: 'Survey Whisper model family. How does whisper.cpp C++ port achieve efficient CPU inference? What size model gives best quality/speed tradeoff on i7 CPU?',
+    keywords: ['Whisper', 'whisper.cpp', 'speech recognition', 'ASR', 'CPU audio'], arxivCats: ['eess.AS','cs.CL'],
+    testable: true, testClaim: 'Whisper.cpp small model runs real-time speech recognition on i7 CPU', claimType: 'inference_speed' },
+
+  { id: 'voice-002', division: 'voice', title: 'Moonshine — faster-than-Whisper ASR',
+    description: 'How does Moonshine achieve better speed than Whisper at similar quality? Architecture differences? Is it suitable for local CPU deployment on consumer hardware?',
+    keywords: ['Moonshine', 'ASR', 'fast speech recognition', 'efficient audio model'], arxivCats: ['eess.AS','cs.LG'],
+    testable: true, testClaim: 'Moonshine runs 5× faster than Whisper base on CPU with comparable WER', claimType: 'inference_speed' },
+
+  { id: 'voice-003', division: 'voice', title: 'Local text-to-speech — XTTS, Piper, and Kokoro',
+    description: 'Survey local TTS options (XTTS-v2, Piper, Kokoro). Quality, latency, and RAM requirements. Which provides best voice output for a local AI agent on 16GB RAM?',
+    keywords: ['XTTS', 'Piper TTS', 'Kokoro', 'local TTS', 'text to speech'], arxivCats: ['eess.AS','cs.CL'],
+    testable: true, testClaim: 'Piper TTS achieves real-time synthesis on CPU with natural voice quality', claimType: 'inference_speed' },
+
+  { id: 'voice-004', division: 'voice', title: 'End-to-end voice pipeline — STT + LLM + TTS on 16GB RAM',
+    description: 'Can a full voice pipeline (whisper.cpp → 7B LLM → Piper TTS) run simultaneously in 16GB RAM? RAM budget analysis. Latency from speech-in to speech-out?',
+    keywords: ['voice pipeline', 'STT LLM TTS', 'voice agent', 'end to end audio'], arxivCats: ['eess.AS','cs.CL','cs.AI'],
+    testable: true, testClaim: 'Full STT+7B LLM+TTS pipeline fits in 16GB RAM with acceptable latency', claimType: 'pipeline' },
+
+  // ══════════════════════════════════════════════════
+  // DIVISION 9: AGI BENCHMARKS & DEFINITIONS
+  // ══════════════════════════════════════════════════
+
+  { id: 'bench-001', division: 'benchmarks', title: 'AGI definitions — measurable criteria',
+    description: 'Leading academic definitions of AGI. Which are measurable with current benchmarks? What would a local-machine AGI demonstrably need to do?',
+    keywords: ['AGI definition', 'general intelligence', 'AGI criteria', 'Chollet'], arxivCats: ['cs.AI'],
+    testable: false },
+
+  { id: 'bench-002', division: 'benchmarks', title: 'ARC-AGI benchmark — abstract reasoning evaluation',
+    description: 'What does ARC-AGI measure? Which small models score well? What techniques (test-time compute, program synthesis) improve ARC scores without massive models?',
+    keywords: ['ARC-AGI', 'abstract reasoning', 'ARC benchmark', 'compositional reasoning'], arxivCats: ['cs.AI','cs.LG'],
+    testable: true, testClaim: 'ARC-AGI scores correlate with genuine novel reasoning better than MMLU', claimType: 'benchmark_score' },
+
+  { id: 'bench-003', division: 'benchmarks', title: 'MMLU, GSM8K, HumanEval — small model performance survey',
+    description: 'Compile performance data for sub-7B models on MMLU, GSM8K, HumanEval. Which models punch above weight? What training approaches explain this?',
+    keywords: ['MMLU', 'GSM8K', 'HumanEval', 'benchmark survey', 'small model eval'], arxivCats: ['cs.CL','cs.AI'],
+    testable: false },
+
+  { id: 'bench-004', division: 'benchmarks', title: 'Holistic multimodal AGI benchmarks',
+    description: 'What benchmarks evaluate text+vision+voice together as a unified capability? MMMU, MMBench, and others — which small multimodal models score highest?',
+    keywords: ['MMMU', 'MMBench', 'multimodal benchmark', 'VLM evaluation', 'holistic AGI'], arxivCats: ['cs.CV','cs.AI'],
+    testable: false },
+
+];
+
+module.exports = { tasks };
