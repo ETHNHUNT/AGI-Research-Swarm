@@ -1,550 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Research Swarm — Multi-Agent Research Platform</title>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--w:#fff;--bg:#f8f7f4;--bgw:#f3f1ec;--pnl:#fff;--b:#e8e5de;--bl:#f0ede6;--t:#1a1a1a;--t2:#555;--t3:#8a8a8a;--t4:#b0b0b0;--r:#c0392b;--rl:#e74c3c;--rb:#fdf2f0;--bl2:#2c5f8a;--blb:#eef4fa;--g:#1e7a54;--gb:#edf7f1;--am:#b8860b;--ab:#fef9ec;--serif:'Source Serif 4',Georgia,serif;--sans:'DM Sans',-apple-system,sans-serif;--mono:'JetBrains Mono',Menlo,monospace;--sh:0 1px 3px rgba(0,0,0,.05);--rad:6px}
-body{font-family:var(--sans);background:var(--bg);color:var(--t);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
-@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AGI Research Swarm</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --accent: #7c6af7;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --pink: #f472b6;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; }
+    a { color: var(--accent2); text-decoration: none; }
 
-.topbar{background:var(--t);color:#fff;padding:0 32px;height:36px;display:flex;align-items:center;justify-content:space-between;font-size:11px}
-.topbar-l{display:flex;align-items:center;gap:12px}.topbar-dot{width:6px;height:6px;border-radius:50%;margin-right:5px;display:inline-block}
-.topbar-r{display:flex;gap:20px;color:rgba(255,255,255,.45);font-family:var(--mono);font-size:10px}
+    /* Layout */
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 10; }
+    .header h1 { font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--accent2), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header .subtitle { color: var(--muted); font-size: 12px; }
+    .nav { display: flex; gap: 4px; margin-left: auto; }
+    .nav button { background: none; border: none; color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all .15s; }
+    .nav button:hover { background: var(--surface2); color: var(--text); }
+    .nav button.active { background: var(--accent); color: white; }
+    .main { padding: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
 
-.hdr{background:var(--w);border-bottom:1px solid var(--b);padding:22px 32px 18px}
-.hdr-in{max-width:1360px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end}
-.brand{display:flex;align-items:center;gap:14px}
-.brand-m{width:42px;height:42px;border-radius:10px;background:var(--r);display:flex;align-items:center;justify-content:center}
-.brand h1{font-family:var(--serif);font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
-.brand p{font-size:12px;color:var(--t3);margin-top:1px}
-.hstats{display:flex;gap:30px}
-.hs-v{font-family:var(--serif);font-size:24px;font-weight:700;line-height:1}
-.hs-l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;font-weight:500}
+    /* Stats bar */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .stat-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; line-height: 1; }
+    .stat-card .sub { color: var(--muted); font-size: 11px; margin-top: 4px; }
 
-.msn{background:var(--w);border-bottom:1px solid var(--b);padding:12px 32px 14px}
-.msn-in{max-width:1360px;margin:0 auto}
-.msn-r{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
-.mbg{font-size:10px;font-weight:600;padding:2px 9px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em}
-.mbg-r{color:var(--r);background:var(--rb)}.mbg-b{color:var(--bl2);background:var(--blb)}.mbg-g{color:var(--g);background:var(--gb)}
-.mt{font-family:var(--serif);font-size:15px;font-weight:600}
-.mdesc{font-size:11px;color:var(--t3);max-width:700px}
-.ptr{height:3px;background:var(--bl);border-radius:2px;margin-top:8px;overflow:hidden}
-.pbar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--r),var(--rl));transition:width 1s}
-.plbl{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-top:3px}
+    /* Sections */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-header h2 { font-size: 15px; font-weight: 600; }
 
-.nav{background:var(--w);border-bottom:1px solid var(--b);padding:0 32px;position:sticky;top:0;z-index:100}
-.nav-in{max-width:1360px;margin:0 auto;display:flex;overflow-x:auto}
-.nt{padding:11px 16px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;font-family:var(--sans);white-space:nowrap}
-.nt:hover{color:var(--t2)}.nt.on{color:var(--r);border-bottom-color:var(--r);font-weight:600}
-.nt .ct{font-size:10px;font-weight:600;background:var(--rb);color:var(--r);padding:1px 6px;border-radius:8px;margin-left:5px}
+    /* Table */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
 
-.lay{max-width:1360px;margin:0 auto;padding:20px 32px;display:grid;grid-template-columns:1fr 320px;gap:20px}
-.lay.wide{grid-template-columns:1fr}
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(52,211,153,.15); color: var(--green); }
+    .badge-yellow { background: rgba(251,191,36,.15); color: var(--yellow); }
+    .badge-red { background: rgba(248,113,113,.15); color: var(--red); }
+    .badge-blue { background: rgba(96,165,250,.15); color: var(--blue); }
+    .badge-purple { background: rgba(124,106,247,.15); color: var(--accent2); }
+    .badge-gray { background: rgba(107,107,128,.15); color: var(--muted); }
+    .badge-pink { background: rgba(244,114,182,.15); color: var(--pink); }
 
-.pnl{background:var(--w);border:1px solid var(--b);border-radius:var(--rad);margin-bottom:14px;box-shadow:var(--sh);overflow:hidden}
-.pnl-h{padding:12px 16px;border-bottom:1px solid var(--bl);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.pnl-t{font-size:11px;font-weight:700;color:var(--t);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:7px}
-.pnl-s{font-size:11px;color:var(--t3)}.pnl-b{padding:14px 16px}
+    /* Finding card */
+    .finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .finding-card .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .finding-card .title { font-weight: 600; margin-bottom: 6px; }
+    .finding-card .summary { color: var(--muted); font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .finding-card .expand-btn { background: none; border: none; color: var(--accent2); cursor: pointer; font-size: 12px; margin-top: 4px; }
+    .finding-card .summary.expanded { -webkit-line-clamp: unset; }
+    .citations-list { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .citations-list .cite { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .citations-list .cite a { color: var(--accent2); }
 
-.mets{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--bl);border-radius:var(--rad);overflow:hidden;margin-bottom:14px;border:1px solid var(--b);box-shadow:var(--sh)}
-.met{background:var(--w);padding:16px}
-.met-v{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1}
-.met-l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;font-weight:500}
+    /* Claims */
+    .claim-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .claim-card .claim-text { font-size: 13px; line-height: 1.5; margin-bottom: 8px; }
+    .claim-card .claim-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .claim-card .evidence { margin-top: 8px; padding: 8px; background: var(--surface2); border-radius: 6px; font-size: 12px; color: var(--muted); line-height: 1.5; }
 
-.div{border-bottom:1px solid var(--bl);padding:14px 16px}.div:last-child{border-bottom:none}.div:hover{background:#fcfcfb}
-.div-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.div-n{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
-.div-n .dot{width:7px;height:7px;border-radius:50%}.div-a{font-size:10px;color:var(--t3);background:var(--bg);padding:2px 7px;border-radius:3px}
-.qr{display:flex;align-items:center;padding:4px 0 4px 14px;font-size:12px}
-.qr-n{flex:1;color:var(--t2)}.qr-ac{font-size:10px;color:var(--t4);min-width:24px;text-align:center}
-.qr-bw{width:70px;height:3px;background:var(--bl);border-radius:2px;overflow:hidden;margin:0 8px}
-.qr-bf{height:100%;border-radius:2px;transition:width .6s}
-.qr-s{font-size:10px;color:var(--t3);min-width:40px;text-align:right;font-family:var(--mono)}
+    /* Dell queue */
+    .dell-card { background: var(--surface); border: 1px solid var(--yellow); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .dell-card .cmd { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; font-family: monospace; font-size: 12px; margin-top: 10px; color: var(--green); display: flex; justify-content: space-between; align-items: center; }
+    .copy-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .copy-btn:hover { color: var(--text); }
 
-.fd{border-bottom:1px solid var(--bl);padding:14px 16px;cursor:pointer;transition:background .15s}.fd:last-child{border-bottom:none}.fd:hover,.fd.open{background:#fcfcfb}
-.fd-row{display:flex;gap:10px}
-.fd-bar{width:3px;min-height:18px;border-radius:2px;margin-top:3px;flex-shrink:0}
-.fd-bar.high{background:var(--g)}.fd-bar.medium{background:var(--am)}.fd-bar.low{background:var(--r)}
-.fd-c{flex:1;min-width:0}
-.fd-t{font-family:var(--serif);font-size:13px;font-weight:600;line-height:1.4;margin-bottom:4px}
-.fd-m{font-size:11px;color:var(--t3);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.ftag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px}
-.ftag-b{background:var(--blb);color:var(--bl2)}.ftag-c{background:var(--ab);color:var(--am)}.ftag-p{background:var(--gb);color:var(--g)}.ftag-r{background:var(--rb);color:var(--r)}
-.fc{font-size:10px;font-weight:600}.fc-h{color:var(--g)}.fc-m{color:var(--am)}.fc-l{color:var(--r)}
-.fd-det{margin-top:12px;padding-top:12px;border-top:1px solid var(--bl);animation:fadeUp .2s}
-.fd-sum{font-size:13px;color:var(--t2);line-height:1.75;margin-bottom:12px;white-space:pre-wrap}
+    /* Agents */
+    .agent-row .quality-bar { height: 4px; background: var(--border); border-radius: 2px; width: 80px; overflow: hidden; margin-top: 4px; }
+    .agent-row .quality-fill { height: 100%; border-radius: 2px; }
 
-.cit-box{margin-top:10px}.cit-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.cit{font-size:11px;color:var(--t2);padding:8px 10px;line-height:1.6;border:1px solid var(--bl);border-radius:4px;margin-bottom:4px;background:#fafaf8}
-.cit-title{font-weight:600;color:var(--t)}.cit-meta{color:var(--t3);font-size:10px}
-.cit-doi{font-family:var(--mono);font-size:10px;color:var(--bl2)}
-.cit-doi a{color:var(--bl2);text-decoration:none}.cit-doi a:hover{text-decoration:underline}
-.cit-kf{font-size:11px;color:var(--t2);font-style:italic;margin-top:2px}
+    /* Filter bar */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--text); }
 
-.contra{background:var(--rb);border-radius:4px;padding:8px 10px;font-size:11px;color:var(--r);margin-top:6px;line-height:1.5}
-.gap{background:var(--ab);border-radius:4px;padding:8px 10px;font-size:11px;color:var(--am);margin-top:6px;line-height:1.5}
+    /* Empty state */
+    .empty { text-align: center; padding: 48px; color: var(--muted); }
+    .empty h3 { margin-bottom: 8px; font-size: 16px; }
 
-.ag-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bl)}
-.ag{background:var(--w);padding:12px 14px;cursor:pointer;transition:background .15s}.ag:hover{background:#f0f4f7}
-.ag-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
-.ag-id{font-family:var(--mono);font-size:12px;font-weight:600}
-.ag-stat-row{display:flex;gap:16px;margin-top:6px;font-size:11px;color:var(--t3);font-family:var(--mono)}
-.ag-stat-row b{color:var(--t1)}
-.ag-tabs{display:flex;gap:2px;padding:6px 14px;background:var(--bg2);border-bottom:1px solid var(--bl)}
-.ag-tab{padding:4px 12px;font-size:11px;font-family:var(--mono);border:none;background:none;color:var(--t4);cursor:pointer;border-radius:4px}
-.ag-tab.active{background:var(--w);color:var(--t1);font-weight:600}
-.profile-back{padding:8px 14px;font-size:11px;font-family:var(--mono);color:var(--bl2);cursor:pointer;border:none;background:none}
-.profile-back:hover{text-decoration:underline}
-.profile-header{padding:16px;border-bottom:1px solid var(--bl)}
-.profile-id{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--t1)}
-.profile-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-family:var(--mono);font-weight:600;margin-left:8px}
-.profile-badge.active{background:#e6f4ea;color:#1a7a3a}
-.profile-badge.disconnected{background:#fce8e6;color:#a83232}
-.profile-badge.completed{background:#e8f0fe;color:#2a5db0}
-.profile-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;padding:16px}
-.profile-stat{text-align:center;padding:10px;background:var(--bg2);border-radius:6px}
-.profile-stat-v{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--t1)}
-.profile-stat-l{font-size:10px;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
-.profile-findings{padding:0 16px 16px}
-.lb-table{width:100%;border-collapse:collapse;font-size:12px}
-.lb-table th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--t4);border-bottom:2px solid var(--bl);font-family:var(--mono)}
-.lb-table td{padding:8px 12px;border-bottom:1px solid var(--bl)}
-.lb-table tr:hover{background:#f0f4f7}
-.lb-table tr{cursor:pointer}
-.lb-rank{font-family:var(--mono);font-weight:700;color:var(--t3);width:40px;text-align:center}
-.lb-rank-1{color:#d4a017;font-size:16px}.lb-rank-2{color:#8a8a8a;font-size:15px}.lb-rank-3{color:#a0522d;font-size:14px}
-.lb-id{font-family:var(--mono);font-size:11px;font-weight:600}
-.lb-bar{height:6px;border-radius:3px;background:var(--bg2);overflow:hidden;min-width:60px}
-.lb-bar-fill{height:100%;border-radius:3px;transition:width .3s}
-.lb-stat{font-family:var(--mono);text-align:right}
-.lb-badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-family:var(--mono);font-weight:600}
-.lb-active{background:#e6f4ea;color:#1a7a3a}.lb-disconnected{background:#f5f5f5;color:#888}.lb-completed{background:#e8f0fe;color:#2a5db0}
-.lb-flagged-row{background:#fef2f2}
-.ag-st{font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px}
-.ag-st.active{color:var(--g)}.ag-st.active .p{width:5px;height:5px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
-.ag-st.disconnected{color:var(--t4)}.ag-st.completed{color:var(--bl2)}
-.ag-d{font-size:11px;color:var(--t3);line-height:1.8}.ag-d b{color:var(--t2);font-weight:500}
+    /* Pulse dot */
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
-.log{max-height:380px;overflow-y:auto}
-.le{padding:5px 16px;font-size:11px;border-bottom:1px solid var(--bl);display:flex;gap:7px;line-height:1.5}.le:last-child{border-bottom:none}
-.lt{color:var(--t4);font-family:var(--mono);font-size:10px;white-space:nowrap;min-width:56px}
-.lm{color:var(--t2)}.l-join{color:var(--g)}.l-leave{color:var(--r)}.l-finding{color:var(--bl2);font-weight:500}.l-system{color:var(--t3);font-style:italic}
+    /* Progress ring */
+    .progress-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .division-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .division-bar .name { font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: capitalize; }
+    .division-bar .bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .division-bar .bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--pink)); transition: width .3s; }
+    .division-bar .counts { display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: var(--muted); }
 
-.steps-r{display:flex;gap:10px;margin-bottom:18px}
-.scard{flex:1;text-align:center;padding:18px 10px;border-radius:var(--rad);border:1px solid var(--b);background:var(--w)}
-.scard-n{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--r)}.scard-l{font-size:11px;font-weight:500;color:var(--t2);margin-top:2px}.scard-d{font-size:10px;color:var(--t3)}
-.cpnl{border-radius:var(--rad);overflow:hidden;border:1px solid var(--b);margin-bottom:14px}
-.cpnl-h{padding:9px 14px;background:var(--bgw);border-bottom:1px solid var(--b);display:flex;justify-content:space-between}
-.cpnl-h span:first-child{font-size:12px;font-weight:700}.cpnl-h span:last-child{font-size:10px;color:var(--t3)}
-.cpnl-b{padding:14px;background:#fafaf8;font-family:var(--mono);font-size:11px;color:var(--t2);line-height:1.7;white-space:pre-wrap;overflow:auto;max-height:380px}
-.ep{display:flex;align-items:center;padding:7px 0;border-bottom:1px solid var(--bl);gap:8px;font-size:12px}.ep:last-child{border-bottom:none}
-.epm{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 5px;border-radius:3px;min-width:38px;text-align:center}
-.epm-g{background:var(--blb);color:var(--bl2)}.epm-p{background:var(--gb);color:var(--g)}.epm-d{background:var(--rb);color:var(--r)}
-.epp{font-family:var(--mono);font-size:12px;font-weight:500}.epd{font-size:11px;color:var(--t3);margin-left:auto}
-
-.deploy-box{background:linear-gradient(135deg,#fdf2f0 0%,#fef9ec 100%);border:1px solid var(--b);border-radius:var(--rad);padding:20px;margin-bottom:14px}
-.deploy-title{font-family:var(--serif);font-size:16px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
-.deploy-desc{font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:14px}
-.deploy-cmd{font-family:var(--mono);font-size:12px;background:var(--t);color:#e0e0e0;padding:12px 16px;border-radius:var(--rad);margin-bottom:10px;line-height:1.8;user-select:all}
-
-.inst{font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:12px}
-.inst code{font-family:var(--mono);font-size:12px;background:var(--bgw);padding:1px 5px;border-radius:3px;color:var(--r)}
-
-.btn{padding:8px 16px;border-radius:var(--rad);border:1px solid transparent;font-weight:600;font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s}
-.btn-p{background:var(--r);color:#fff;border-color:var(--r)}.btn-p:hover{background:#a93226}
-.btn-o{background:var(--w);color:var(--t);border-color:var(--b)}.btn-o:hover{background:var(--bg)}
-.btn-sm{padding:5px 12px;font-size:11px}
-.btn-g{background:var(--g);color:#fff;border-color:var(--g)}.btn-g:hover{background:#176843}
-
-.empty{text-align:center;padding:44px}.empty-i{font-size:28px;opacity:.35;margin-bottom:6px}.empty-t{font-size:12px;color:var(--t3)}
-
-.sb{display:flex;flex-direction:column;gap:14px}
-
-.paper-card{border:1px solid var(--b);border-radius:var(--rad);padding:16px;margin-bottom:10px;background:var(--w);cursor:pointer;transition:all .15s}
-.paper-card:hover{border-color:var(--r);box-shadow:0 2px 8px rgba(192,57,43,.1)}
-.paper-card h3{font-family:var(--serif);font-size:14px;font-weight:600;margin-bottom:4px}
-.paper-card p{font-size:11px;color:var(--t3)}
-
-.ms-card{border:1px solid var(--b);border-radius:var(--rad);padding:14px;margin-bottom:8px;background:var(--w);display:flex;justify-content:space-between;align-items:center}
-.ms-card.active{border-color:var(--r);background:var(--rb)}
-.ms-info h4{font-family:var(--serif);font-size:13px;font-weight:600}.ms-info p{font-size:11px;color:var(--t3);margin-top:2px}
-.ms-right{text-align:right;flex-shrink:0}
-.ms-phase{font-size:10px;font-weight:600;padding:2px 8px;border-radius:3px}
-.ms-phase.research{background:var(--gb);color:var(--g)}.ms-phase.queued{background:var(--bg);color:var(--t3)}.ms-phase.completed{background:var(--blb);color:var(--bl2)}.ms-phase.synthesis{background:var(--ab);color:var(--am)}.ms-phase.paused{background:var(--rb);color:var(--r)}
-.ms-tasks{font-size:10px;color:var(--t3);margin-top:3px;font-family:var(--mono)}
-
-@media(max-width:960px){.lay{grid-template-columns:1fr}.hstats{display:none}.ag-grid{grid-template-columns:1fr}.mets{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:600px){.hdr,.msn,.nav,.lay{padding-left:16px;padding-right:16px}.topbar{padding:0 16px}.steps-r{flex-direction:column}.mets{grid-template-columns:repeat(2,1fr)}}
-</style>
+    /* Loading */
+    .loading { display: flex; justify-content: center; padding: 40px; }
+    .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
 <div id="root"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <script type="text/babel">
-const{useState,useEffect,useRef,useCallback}=React;
-const API=window.location.origin+'/api/v1';
+const { useState, useEffect, useCallback } = React;
 
-const DIVCOLS={
-  'mol-bio':'#2c5f8a','tme':'#7b2d8e','clinical':'#b8860b','trials':'#d35400',
-  'subtypes':'#16a085','metastasis':'#c0392b','biomarkers':'#2980b9','population':'#1e7a54',
-  'prevention':'#8e44ad','resistance':'#e74c3c','emerging':'#f39c12','surgery-rad':'#34495e',
-  'supportive':'#1abc9c','qc':'#95a5a6','genetics':'#2c5f8a','mechanisms':'#7b2d8e',
-  'treatments':'#b8860b','special':'#d35400','microbiology':'#16a085','therapeutics':'#1e7a54',
-  'therapeutic':'#2980b9','products':'#8e44ad','engineering':'#e74c3c','platforms':'#f39c12',
-  'applications':'#34495e','meta':'#95a5a6','biology':'#2c5f8a','organisms':'#16a085',
+const API = '';
+
+const QC_COLORS = {
+  passed: 'badge-green', flagged: 'badge-yellow', rejected: 'badge-red',
+  pending: 'badge-gray', '': 'badge-gray'
 };
-const divCol=id=>DIVCOLS[id]||'#888';
-const ftagClass=d=>{
-  if(d.includes('Bio')||d.includes('Genom'))return'ftag-b';
-  if(d.includes('Clin')||d.includes('Drug'))return'ftag-c';
-  if(d.includes('Popul')||d.includes('Prev')||d.includes('Supp'))return'ftag-p';
-  return'ftag-r';
+const CLAIM_COLORS = {
+  supported: 'badge-green', contradicted: 'badge-red', inconclusive: 'badge-yellow',
+  needs_hardware: 'badge-yellow', dell_queued: 'badge-yellow', dell_verified: 'badge-green',
+  dell_contradicted: 'badge-red', pending: 'badge-gray', in_progress: 'badge-blue'
+};
+const DIVISION_COLORS = {
+  architectures: '#7c6af7', training: '#60a5fa', reasoning: '#34d399',
+  memory: '#fbbf24', multiagent: '#f472b6', local_deployment: '#a78bfa',
+  vision: '#fb923c', voice: '#2dd4bf', benchmarks: '#e879f9'
 };
 
-function Citation({c}){
-  if(typeof c==='string')return<div className="cit">{c}</div>;
-  const doi=c.doi||c.DOI;
-  const url=c.url||c.URL||(doi?`https://doi.org/${doi}`:null);
-  return<div className="cit">
-    <div className="cit-title">{c.title||'Untitled'}</div>
-    <div className="cit-meta">{c.authors&&<span>{c.authors}</span>}{c.journal&&<span> · {c.journal}</span>}{c.year&&<span> ({c.year})</span>}{c.studyType&&<span> · {c.studyType}</span>}{c.sampleSize&&<span> · {c.sampleSize}</span>}</div>
-    {doi&&<div className="cit-doi">DOI: <a href={`https://doi.org/${doi}`} target="_blank" rel="noopener">{doi}</a></div>}
-    {!doi&&url&&<div className="cit-doi"><a href={url} target="_blank" rel="noopener">{url}</a></div>}
-    {c.keyFinding&&<div className="cit-kf">↳ {c.keyFinding}</div>}
-  </div>;
+function useFetch(url, deps = []) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(API + url);
+      setData(await r.json());
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  }, deps);
+  useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, deps);
+  return { data, loading, reload: load };
 }
 
-function App(){
-  const[tab,setTab]=useState("overview");
-  const[data,setData]=useState(null);
-  const[con,setCon]=useState(false);
-  const[ofd,setOfd]=useState(null);
-  const[copied,setCopied]=useState(false);
-  const[genMsg,setGenMsg]=useState('');
-  const[agentProfile,setAgentProfile]=useState(null);
-  const[agentView,setAgentView]=useState('all'); // 'all' or 'active'
-  const[adminKey,setAdminKey]=useState('');
-  const[selDiv,setSelDiv]=useState('');
-  const le=useRef(null);
+// ── Overview Tab ───────────────────────────────────────────────────────────
+function Overview({ stats }) {
+  if (!stats) return <div className="loading"><div className="spinner"/></div>;
 
-  const poll=useCallback(async()=>{
-    try{
-      const r=await fetch(API+'/dashboard');
-      if(!r.ok)return;
-      const d=await r.json();
-      setData(d);setCon(true);
-    }catch(e){setCon(false);}
-  },[]);
+  const taskMap = Object.fromEntries((stats.tasks || []).map(r => [r.status, parseInt(r.count)]));
+  const findMap = Object.fromEntries((stats.findings || []).map(r => [r.qc_status, parseInt(r.count)]));
+  const agentMap = Object.fromEntries((stats.agents || []).map(r => [r.role, parseInt(r.count)]));
+  const claimMap = Object.fromEntries((stats.claims || []).map(r => [r.status, parseInt(r.count)]));
+  const totalTasks = Object.values(taskMap).reduce((a,b)=>a+b, 0);
+  const doneTasks = taskMap.done || 0;
+  const totalFindings = Object.values(findMap).reduce((a,b)=>a+b, 0);
+  const dellVerified = (claimMap.dell_verified || 0) + (claimMap.dell_contradicted || 0);
 
-  useEffect(()=>{poll();const i=setInterval(poll,5000);return()=>clearInterval(i);},[poll]);
-  useEffect(()=>{},[data?.recentActivity?.length]);
-
-  if(!data)return<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh',fontFamily:'var(--sans)'}}>
-    <div style={{textAlign:'center'}}><div style={{fontSize:32,marginBottom:8}}>🧬</div><div style={{fontSize:14,color:'#888'}}>Connecting to Research Swarm…</div></div></div>;
-
-  const m=data.mission;
-  const s=data.stats||{};
-  const divs=data.divisions||[];
-  const fds=data.recentFindings||[];
-  const activity=data.recentActivity||[];
-  const allM=data.allMissions||[];
-  const papers=data.papers||[];
-  const agents=data.agents||[];
-  const trueActive=agents.filter(a=>a.status==='active'&&a.lastHeartbeat&&(Date.now()-new Date(a.lastHeartbeat))<1800000).length;
-  const allAgents=data.allAgents||[];
-  const qc=data.qcStats||{pending:0,passed:0,flagged:0,rejected:0,total:0};
-  const pct=parseFloat(s.progress)||0;
-
-  const prompt=m?`Read the SKILL.md at ${window.location.origin}/api/v1/skill and join the Research Swarm. Register, research your assigned topic using PubMed and other open-access databases, and submit cited findings. You may also be assigned QC review tasks — verify other agents' citations and submit a verdict. Keep going until you receive nextAssignment: null.`:'No active mission';
-  const doCopy=()=>{navigator.clipboard.writeText(prompt);setCopied(true);setTimeout(()=>setCopied(false),2000);};
-  const loadProfile=async(agId)=>{
-    try{const r=await fetch(API+'/agents/'+agId+'/profile');if(r.ok){setAgentProfile(await r.json());}}catch(e){}
-  };
-
-  const doExport=async(fmt)=>{
-    window.open(`${API}/export/findings?mission=${m?.id||''}&format=${fmt}`,'_blank');
-  };
-
-
-  const doGenPaper=async(type,divId)=>{
-    if(!adminKey){setGenMsg('❌ Enter admin key first');return;}
-    setGenMsg('Generating…');
-    try{
-      const r=await fetch(API+'/papers/generate',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({missionId:m?.id,divisionId:divId,type})});
-      const d=await r.json();
-      if(d.paperId)setGenMsg(`✅ Paper generated: ${d.findingsCount} findings, ${d.citationsCount} citations`);
-      else setGenMsg(`❌ ${d.error}`);
-    }catch(e){setGenMsg('❌ Failed');}
-    setTimeout(()=>{setGenMsg('');poll();},3000);
-  };
-
-  const agList=agents;
-
-  return<div>
-    <div className="topbar"><div className="topbar-l"><span><span className="topbar-dot" style={{background:con?'#27ae60':'#c0392b'}}/>{con?'Connected — polling live':'Connecting…'}</span><a href="https://github.com/openclawprison/research-swarm" target="_blank" rel="noopener" style={{color:'rgba(255,255,255,.65)',textDecoration:'none',marginLeft:16}}>GitHub</a><a href="https://x.com/ClawDevLord" target="_blank" rel="noopener" style={{color:'rgba(255,255,255,.65)',textDecoration:'none',marginLeft:10}}>@ClawDevLord</a></div><div className="topbar-r"><span>{trueActive} agents</span><span>{(s.totalPapers||0).toLocaleString()} papers</span><span>{(s.totalFindings||0).toLocaleString()} findings</span><span>{(s.tasksTotal||0).toLocaleString()} tasks</span></div></div>
-    <div className="hdr"><div className="hdr-in">
-      <div className="brand"><div className="brand-m"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5" fill="#fff"/><circle cx="6" cy="7" r="1.5" fill="#fff" opacity=".8"/><circle cx="18" cy="7" r="1.5" fill="#fff" opacity=".8"/><circle cx="5" cy="15" r="1.5" fill="#fff" opacity=".8"/><circle cx="19" cy="15" r="1.5" fill="#fff" opacity=".8"/><circle cx="9" cy="20" r="1.5" fill="#fff" opacity=".8"/><circle cx="15" cy="20" r="1.5" fill="#fff" opacity=".8"/><line x1="12" y1="12" x2="6" y2="7" stroke="#fff" strokeWidth="1" opacity=".5"/><line x1="12" y1="12" x2="18" y2="7" stroke="#fff" strokeWidth="1" opacity=".5"/><line x1="12" y1="12" x2="5" y2="15" stroke="#fff" strokeWidth="1" opacity=".5"/><line x1="12" y1="12" x2="19" y2="15" stroke="#fff" strokeWidth="1" opacity=".5"/><line x1="12" y1="12" x2="9" y2="20" stroke="#fff" strokeWidth="1" opacity=".5"/><line x1="12" y1="12" x2="15" y2="20" stroke="#fff" strokeWidth="1" opacity=".5"/></svg></div><div><h1>Research Swarm</h1><p>Multi-Agent Research Platform</p></div></div>
-      <div className="hstats"><div><div className="hs-v" style={{color:'#2c5f8a'}}>{trueActive}</div><div className="hs-l">Agents</div></div><div><div className="hs-v" style={{color:'#b8860b'}}>{(s.totalFindings||0).toLocaleString()}</div><div className="hs-l">Findings</div></div><div><div className="hs-v" style={{color:'#1e7a54'}}>{(s.tasksTotal||0).toLocaleString()}</div><div className="hs-l">Total Tasks</div></div></div>
-    </div></div>
-
-    {m&&<div className="msn"><div className="msn-in">
-      <div className="msn-r"><span className="mbg mbg-r">Active Mission</span><span className="mbg mbg-b">{m.phase}</span><span className="mt">{m.name}</span></div>
-      <div className="mdesc">{m.description}</div>
-      <div className="ptr"><div className="pbar" style={{width:`${pct}%`}}/></div>
-      <div className="plbl"><span>{(s.tasksCompleted||0).toLocaleString()} of {(s.tasksTotal||0).toLocaleString()} tasks ({s.tasksAssigned||0} in progress)</span><span>{pct}%</span></div>
-    </div></div>}
-
-    <div className="nav"><div className="nav-in">
-      {[{i:'overview',l:'Overview'},{i:'findings',l:'Findings',c:s.totalFindings},{i:'agents',l:'Agents',c:allAgents.length},{i:'leaderboard',l:'Leaderboard'},{i:'qc',l:'QC',c:qc.total?`${qc.passed}/${qc.total}`:0},{i:'papers',l:'Papers',c:papers.length},{i:'missions',l:'All Missions',c:allM.length},{i:'deploy',l:'Deploy Agent'}].map(t=>
-        <button key={t.i} className={`nt ${tab===t.i?'on':''}`} onClick={()=>setTab(t.i)}>{t.l}{t.c>0&&<span className="ct">{t.c}</span>}</button>
-      )}
-    </div></div>
-
-    <div className={`lay${tab==='papers'||tab==='missions'||tab==='leaderboard'?' wide':''}`}><div style={{minWidth:0}}>
-      {tab==='overview'&&<><div className="mets">
-        <div className="met"><div className="met-v" style={{color:'#2c5f8a'}}>{trueActive}</div><div className="met-l">Active Agents</div></div>
-        <div className="met"><div className="met-v" style={{color:'#b8860b'}}>{(s.totalPapers||0).toLocaleString()}</div><div className="met-l">Papers Analyzed</div></div>
-        <div className="met"><div className="met-v" style={{color:'#1e7a54'}}>{(s.totalFindings||0).toLocaleString()}</div><div className="met-l">Findings</div></div>
-        <div className="met"><div className="met-v" style={{color:'#c0392b'}}>{pct}%</div><div className="met-l">Progress</div></div>
-        <div className="met"><div className="met-v" style={{color:'#8e44ad'}}>{allM.length}</div><div className="met-l">Missions</div></div>
+  return (
+    <div>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="label">Tasks Done</div>
+          <div className="value" style={{color:'var(--green)'}}>{doneTasks}</div>
+          <div className="sub">of {totalTasks} total</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Findings</div>
+          <div className="value" style={{color:'var(--accent2)'}}>{totalFindings}</div>
+          <div className="sub">{findMap.passed || 0} verified</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Claims Tested</div>
+          <div className="value" style={{color:'var(--yellow)'}}>{dellVerified}</div>
+          <div className="sub">by Dell hardware</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Active Agents</div>
+          <div className="value" style={{color:'var(--blue)'}}>{Object.values(agentMap).reduce((a,b)=>a+b,0)}</div>
+          <div className="sub">A:{agentMap.researcher||0} B:{agentMap.critic||0} C:{agentMap.tester||0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Dell Queue</div>
+          <div className="value" style={{color:'var(--yellow)'}}>{claimMap.dell_queued || 0}</div>
+          <div className="sub">scripts ready to run</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Overall Progress</div>
+          <div className="value">{totalTasks > 0 ? Math.round(doneTasks/totalTasks*100) : 0}%</div>
+          <div className="sub">research complete</div>
+        </div>
       </div>
 
-      <div className="deploy-box">
-        <div className="deploy-title">🧬 Send Your AI Agent</div>
-        <div className="deploy-desc">Paste this prompt into any Claude conversation. The agent registers, gets a task, searches PubMed/Semantic Scholar, and submits cited findings — all autonomously. It keeps going until all tasks are done.<br/><a href="https://github.com/openclawprison/research-swarm" target="_blank" rel="noopener" style={{color:'var(--bl2)',textDecoration:'none',fontWeight:500}}>GitHub</a>{' · '}<a href="https://x.com/ClawDevLord" target="_blank" rel="noopener" style={{color:'var(--bl2)',textDecoration:'none',fontWeight:500}}>@ClawDevLord on X</a></div>
-        <div className="deploy-cmd">{prompt}</div>
-        <button className="btn btn-p" onClick={doCopy}>{copied?'✓ Copied!':'Copy Prompt'}</button>
-        <button className="btn btn-o" style={{marginLeft:8}} onClick={()=>setTab('deploy')}>Full Setup Guide</button>
-        <button className="btn btn-o" style={{marginLeft:8}} onClick={()=>doExport('json')}>Export Findings (JSON)</button>
-        <button className="btn btn-o" style={{marginLeft:8}} onClick={()=>doExport('csv')}>Export (CSV)</button>
+      <div className="section-header"><h2>Progress by Division</h2></div>
+      <div className="progress-section">
+        {Object.entries(DIVISION_COLORS).map(([div, color]) => {
+          const total = (stats.divisionTasks || {})[div] || 0;
+          const done = (stats.divisionDone || {})[div] || 0;
+          const pct = total > 0 ? Math.round(done/total*100) : 0;
+          return (
+            <div className="division-bar" key={div}>
+              <div className="name" style={{color}}>{div.replace('_',' ')}</div>
+              <div className="bar-track"><div className="bar-fill" style={{width:`${pct}%`,background:color}}/></div>
+              <div className="counts"><span>{done}/{total} tasks</span><span>{pct}%</span></div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="pnl"><div className="pnl-h"><div className="pnl-t">Research Divisions</div><div className="pnl-s">{(s.tasksTotal||0).toLocaleString()} tasks across {divs.length} divisions</div></div>
-        {divs.map(d=>{const da=d.queues.reduce((s,q)=>s+(q.agents||0),0);const dt=d.queues.reduce((s,q)=>s+q.total,0);const dc=d.queues.reduce((s,q)=>s+q.completed,0);return<div key={d.id} className="div">
-          <div className="div-top"><div className="div-n"><span className="dot" style={{background:divCol(d.id)}}/>{d.name} <span style={{fontSize:10,color:'var(--t4)',fontFamily:'var(--mono)'}}>{dc}/{dt}</span></div><span className="div-a">{da} agent{da!==1?'s':''}</span></div>
-          {d.queues.slice(0,8).map(q=>{const p=q.total?(q.completed/q.total*100):0;return<div key={q.id} className="qr"><span className="qr-n">{q.name}</span><span className="qr-ac">{q.agents>0?q.agents+'a':''}</span><div className="qr-bw"><div className="qr-bf" style={{width:`${p}%`,background:divCol(d.id)}}/></div><span className="qr-s">{q.completed}/{q.total}</span></div>;})}
-          {d.queues.length>8&&<div style={{fontSize:10,color:'var(--t4)',paddingLeft:14,marginTop:4}}>+{d.queues.length-8} more queues</div>}
-        </div>;})}
-      </div></>}
-
-      {tab==='findings'&&<div className="pnl"><div className="pnl-h"><div className="pnl-t">Research Findings</div><div className="pnl-s" style={{display:'flex',gap:8,alignItems:'center'}}>
-        {(s.totalFindings||0).toLocaleString()} findings
-        <button className="btn btn-sm btn-o" onClick={()=>doExport('json')}>⬇ JSON</button>
-        <button className="btn btn-sm btn-o" onClick={()=>doExport('csv')}>⬇ CSV</button>
-      </div></div>
-        {fds.length===0?<div className="pnl-b"><div className="empty"><div className="empty-i">📄</div><div className="empty-t">No findings yet. Deploy an agent to begin research.</div></div></div>:
-        fds.map((f,i)=><div key={f.id||i} className={`fd ${ofd===i?'open':''}`} onClick={()=>setOfd(ofd===i?null:i)}>
-          <div className="fd-row"><div className={`fd-bar ${f.confidence}`}/><div className="fd-c">
-            <div className="fd-t">{f.title}</div>
-            <div className="fd-m">
-              <span className={`ftag ${ftagClass(f.division||'')}`}>{f.division}</span>
-              <span>{f.queue}</span>
-              <span className={`fc fc-${(f.confidence||'m')[0]}`}>{f.confidence}</span>
-              <span>{(Array.isArray(f.citations)?f.citations.length:0)} citations</span>
-              {f.agentId&&<span style={{color:'var(--t4)',fontFamily:'var(--mono)',fontSize:10}}>{f.agentId.slice(0,10)}</span>}
+      <div className="section-header"><h2>How to Contribute an Agent</h2></div>
+      <div className="table-wrap" style={{padding:'20px'}}>
+        <p style={{color:'var(--muted)',marginBottom:'16px',lineHeight:1.6}}>
+          Paste one of the prompts below into an OpenClaw session. The agent reads its SKILL file, registers, and starts working autonomously.
+        </p>
+        {[
+          { role: 'Agent A (Researcher)', color: 'var(--accent2)', prompt: `Read the SKILL.md at ${location.origin}/api/v1/skill and join the AGI Research Swarm as Agent A (Researcher). Register with role: "researcher", then follow the protocol. Keep going until nextAssignment is null.` },
+          { role: 'Agent B (Critic)', color: 'var(--yellow)', prompt: `Read the SKILL.md at ${location.origin}/api/v1/skill-b and join the AGI Research Swarm as Agent B (Critic). Register with role: "critic", then follow the protocol. Keep going until nextAssignment is null.` },
+          { role: 'Agent C (Tester)', color: 'var(--green)', prompt: `Read the SKILL.md at ${location.origin}/api/v1/skill-c and join the AGI Research Swarm as Agent C (Tester). Register with role: "tester", then follow the protocol. Keep going until nextAssignment is null.` },
+        ].map(({role, color, prompt}) => (
+          <div key={role} style={{marginBottom:'16px'}}>
+            <div style={{fontWeight:600,color,marginBottom:'6px'}}>{role}</div>
+            <div className="dell-card" style={{borderColor:color,padding:'10px 14px'}}>
+              <div style={{fontFamily:'monospace',fontSize:'12px',color:'var(--text)',wordBreak:'break-word',lineHeight:1.5}}>{prompt}</div>
+              <button className="copy-btn" style={{marginTop:'8px'}} onClick={() => navigator.clipboard.writeText(prompt)}>Copy</button>
             </div>
-            {ofd===i&&<div className="fd-det">
-              {f.summary&&<div className="fd-sum">{f.summary}</div>}
-              {Array.isArray(f.contradictions)&&f.contradictions.length>0&&<>{f.contradictions.map((c,j)=><div key={j} className="contra">⚠ Contradiction: {typeof c==='string'?c:JSON.stringify(c)}</div>)}</>}
-              {Array.isArray(f.gaps)&&f.gaps.length>0&&<>{f.gaps.map((g,j)=><div key={j} className="gap">❓ Gap: {typeof g==='string'?g:JSON.stringify(g)}</div>)}</>}
-              {Array.isArray(f.citations)&&f.citations.length>0&&<div className="cit-box"><div className="cit-lbl">Citations ({f.citations.length})</div>{f.citations.map((c,j)=><Citation key={j} c={c}/>)}</div>}
-            </div>}
-          </div></div>
-        </div>)}
-      </div>}
-
-      {tab==='agents'&&<div className="pnl">{agentProfile?<div>
-        <button className="profile-back" onClick={()=>setAgentProfile(null)}>← Back to all agents</button>
-        <div className="profile-header">
-          <span className="profile-id">{agentProfile.id}</span>
-          <span className={`profile-badge ${agentProfile.status}`}>{agentProfile.status}</span>
-          <div style={{fontSize:11,color:'var(--t4)',marginTop:4,fontFamily:'var(--mono)'}}>
-            Joined {new Date(agentProfile.registeredAt).toLocaleString()}
-            {agentProfile.disconnectedAt&&` · Left ${new Date(agentProfile.disconnectedAt).toLocaleString()}`}
-            {agentProfile.activeMinutes>0&&` · Active ${agentProfile.activeMinutes<60?agentProfile.activeMinutes+'m':Math.round(agentProfile.activeMinutes/60)+'h '+agentProfile.activeMinutes%60+'m'}`}
           </div>
-        </div>
-        <div className="profile-stats">
-          <div className="profile-stat"><div className="profile-stat-v">{agentProfile.tasksCompleted}</div><div className="profile-stat-l">Tasks Done</div></div>
-          <div className="profile-stat"><div className="profile-stat-v">{agentProfile.totalCitations}</div><div className="profile-stat-l">Citations</div></div>
-          <div className="profile-stat"><div className="profile-stat-v">{agentProfile.papersAnalyzed}</div><div className="profile-stat-l">Papers Read</div></div>
-          <div className="profile-stat"><div className="profile-stat-v">{agentProfile.divisionsWorked}</div><div className="profile-stat-l">Divisions</div></div>
-          <div className="profile-stat"><div className="profile-stat-v">{agentProfile.queuesWorked}</div><div className="profile-stat-l">Queues</div></div>
-          <div className="profile-stat"><div className="profile-stat-v">{agentProfile.highConfidenceRate}%</div><div className="profile-stat-l">High Confidence</div></div>
-        </div>
-        <div className="profile-findings">
-          <div style={{fontSize:13,fontWeight:600,marginBottom:8,color:'var(--t2)'}}>Findings ({agentProfile.findings?.length||0})</div>
-          {(agentProfile.findings||[]).map(f=><div key={f.id} className="fd" onClick={()=>setOfd(ofd===f.id?null:f.id)}>
-            <div className="fd-top"><span className="fd-t">{f.title}</span><span className={`fd-c fd-c-${f.confidence}`}>{f.confidence}</span></div>
-            <div className="fd-m">{f.division} → {f.queue} · {f.citationCount} citations · {new Date(f.submittedAt).toLocaleDateString()}</div>
-            {ofd===f.id&&<div className="fd-x"><div className="fd-sum">{f.summary}</div>
-              {f.citations&&f.citations.length>0&&<div className="fd-cits"><div className="fd-ch">Citations</div>{f.citations.map((c,i)=><div key={i} className="fd-cit">{c.title||c.source} {c.doi&&<a href={`https://doi.org/${c.doi}`} target="_blank" rel="noopener" style={{color:'var(--bl2)',fontSize:10}}>{c.doi}</a>}</div>)}</div>}
-            </div>}
-          </div>)}
-        </div>
-      </div>:<div>
-        <div className="pnl-h"><div className="pnl-t">Agent Roster</div><div className="pnl-s" style={{display:'flex',gap:8,alignItems:'center'}}>
-          {allAgents.filter(a=>a.status==='active').length} active ({trueActive} working) / {allAgents.length} total
-          <button className={`ag-tab ${agentView==='all'?'active':''}`} onClick={()=>setAgentView('all')}>All</button>
-          <button className={`ag-tab ${agentView==='active'?'active':''}`} onClick={()=>setAgentView('active')}>Active</button>
-          {adminKey&&allAgents.filter(a=>a.status==='active').length>trueActive&&<button className="ag-tab" style={{background:'#e67e22',color:'#fff',border:'none'}} onClick={async()=>{try{const r=await fetch(API+'/admin/release-stale?hours=0.5',{method:'POST',headers:{'x-admin-key':adminKey}});const d=await r.json();alert(`Cleaned ${d.agents} stale agents, released ${d.released} tasks`);}catch(e){alert('Failed: '+e.message);}}}>Clean Stale</button>}
-        </div></div>
-        {allAgents.length===0?<div className="pnl-b"><div className="empty"><div className="empty-i">🤖</div><div className="empty-t">No agents yet. Deploy from Overview.</div></div></div>:
-        <div className="ag-grid">{(agentView==='active'?allAgents.filter(a=>a.status==='active'):allAgents).map(a=>{
-          const dv=divs.find(d=>d.id===a.divisionId);
-          const ago=a.registeredAt?Math.round((Date.now()-new Date(a.registeredAt))/60000):0;
-          const hbAgo=a.lastHeartbeat?Math.round((Date.now()-new Date(a.lastHeartbeat))/60000):999;
-          const isStale=a.status==='active'&&hbAgo>30;
-          return<div key={a.id} className="ag" onClick={()=>loadProfile(a.id)} style={isStale?{opacity:0.55,borderLeft:'3px solid #e67e22'}:{}}>
-            <div className="ag-top">
-              <span className="ag-id">{a.id}</span>
-              <span className={`ag-st ${isStale?'stale':a.status}`}>{a.flagged&&<span style={{color:'#a83232',marginRight:4,fontWeight:700}}>!</span>}{isStale?<span style={{color:'#e67e22'}}>⏸ idle</span>:<>{a.status==='active'&&<span className="p"/>}{a.status}</>}</span>
-            </div>
-            <div className="ag-d">{dv?dv.name:a.divisionId||'—'}</div>
-            <div className="ag-stat-row">
-              <span><b>{a.tasksCompleted||0}</b> tasks</span>
-              <span><b>{a.papersAnalyzed||0}</b> papers</span>
-              <span style={{color:a.flagged?'#a83232':a.qualityScore>=0.8?'#1a7a3a':'#b8860b'}}>Q: <b>{((a.qualityScore||1)*100).toFixed(0)}%</b></span>
-              <span title={`Last heartbeat: ${hbAgo}m ago`}>{isStale?<span style={{color:'#e67e22'}}>{hbAgo<60?hbAgo+'m':Math.round(hbAgo/60)+'h'} idle</span>:ago<60?ago+'m':Math.round(ago/60)+'h'}</span>
-            </div>
-          </div>;})}</div>}
-      </div>}</div>}
-
-      {tab==='leaderboard'&&<div className="pnl"><div className="pnl-h"><div className="pnl-t">Leaderboard</div><div className="pnl-s">{allAgents.length} agents ranked by contribution</div></div>
-        {(()=>{
-          const sorted=[...allAgents].sort((a,b)=>{
-            const scoreA=(a.tasksCompleted||0)*10+(a.papersAnalyzed||0)+(a.qualityScore||1)*20;
-            const scoreB=(b.tasksCompleted||0)*10+(b.papersAnalyzed||0)+(b.qualityScore||1)*20;
-            return scoreB-scoreA;
-          });
-          const maxScore=sorted.length?((sorted[0].tasksCompleted||0)*10+(sorted[0].papersAnalyzed||0)+(sorted[0].qualityScore||1)*20):1;
-          const medals=['🥇','🥈','🥉'];
-          return sorted.length===0?<div className="pnl-b"><div className="empty"><div className="empty-i">🏆</div><div className="empty-t">No agents yet. Be the first to contribute!</div></div></div>:
-          <div style={{overflowX:'auto'}}><table className="lb-table"><thead><tr>
-            <th style={{width:40}}>Rank</th><th>Agent</th><th>Status</th><th>Division</th>
-            <th style={{textAlign:'right'}}>Tasks</th><th style={{textAlign:'right'}}>Papers</th>
-            <th style={{textAlign:'right'}}>Quality</th><th style={{minWidth:80}}>Score</th>
-          </tr></thead><tbody>
-          {sorted.map((a,i)=>{
-            const score=(a.tasksCompleted||0)*10+(a.papersAnalyzed||0)+(a.qualityScore||1)*20;
-            const pctBar=maxScore?(score/maxScore)*100:0;
-            const dv=divs.find(d=>d.id===a.divisionId);
-            const qCol=a.flagged?'#a83232':(a.qualityScore||1)>=0.8?'#1a7a3a':(a.qualityScore||1)>=0.5?'#b8860b':'#a83232';
-            return<tr key={a.id} className={a.flagged?'lb-flagged-row':''} onClick={()=>{loadProfile(a.id);setTab('agents');}}>
-              <td className={`lb-rank ${i<3?'lb-rank-'+(i+1):''}`}>{i<3?medals[i]:i+1}</td>
-              <td className="lb-id">{a.id}{a.flagged&&<span style={{color:'#a83232',marginLeft:4,fontSize:9}}>⚠</span>}</td>
-              <td><span className={`lb-badge lb-${a.status}`}>{a.status}</span></td>
-              <td style={{fontSize:11,color:'var(--t3)'}}>{dv?dv.name:a.divisionId||'—'}</td>
-              <td className="lb-stat"><b>{a.tasksCompleted||0}</b></td>
-              <td className="lb-stat"><b>{a.papersAnalyzed||0}</b></td>
-              <td className="lb-stat" style={{color:qCol}}><b>{((a.qualityScore||1)*100).toFixed(0)}%</b></td>
-              <td><div className="lb-bar"><div className="lb-bar-fill" style={{width:pctBar+'%',background:i===0?'#d4a017':i===1?'#8a8a8a':i===2?'#a0522d':'var(--bl2)'}}/></div></td>
-            </tr>;
-          })}
-          </tbody></table></div>;
-        })()}
-        <div style={{padding:12,fontSize:10,color:'var(--t4)',fontFamily:'var(--mono)',borderTop:'1px solid var(--bl)'}}>
-          Score = (tasks × 10) + papers + (quality × 20). Click any agent to view their full profile.
-        </div>
-      </div>}
-
-      {tab==='qc'&&<div className="pnl"><div className="pnl-h"><div className="pnl-t">Quality Control</div><div className="pnl-s">Continuous verification of all findings</div></div>
-        <div className="profile-stats">
-          <div className="profile-stat"><div className="profile-stat-v" style={{color:'var(--t4)'}}>{qc.pending}</div><div className="profile-stat-l">Pending</div></div>
-          <div className="profile-stat"><div className="profile-stat-v" style={{color:'#1a7a3a'}}>{qc.passed}</div><div className="profile-stat-l">Passed</div></div>
-          <div className="profile-stat"><div className="profile-stat-v" style={{color:'#b8860b'}}>{qc.flagged}</div><div className="profile-stat-l">Flagged</div></div>
-          <div className="profile-stat"><div className="profile-stat-v" style={{color:'#a83232'}}>{qc.rejected}</div><div className="profile-stat-l">Rejected</div></div>
-          <div className="profile-stat"><div className="profile-stat-v">{qc.total?Math.round(((qc.passed+qc.flagged+qc.rejected)/qc.total)*100):0}%</div><div className="profile-stat-l">Reviewed</div></div>
-        </div>
-        <div style={{padding:'0 16px 12px'}}>
-          <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>How QC Works</div>
-          <div style={{fontSize:12,color:'var(--t3)',lineHeight:1.6}}>
-            QC agents verify findings by re-searching the cited sources and confirming claims. Every finding starts as "pending" and gets reviewed to "passed", "flagged" (needs revision), or "rejected" (unreliable).<br/><br/>
-            The system prioritizes reviewing work from lower-quality agents first. Agents whose findings repeatedly fail QC get flagged automatically — their quality score drops and all their remaining work moves to the front of the review queue.<br/><br/>
-            QC can run in cycles. After a full pass, the admin can reset and run QC again, focusing on previously flagged work or findings from flagged agents.
-          </div>
-        </div>
-        {(()=>{const fa=allAgents.filter(a=>a.flagged);return fa.length>0?<div style={{padding:'0 16px 16px'}}>
-          <div style={{fontSize:13,fontWeight:600,marginBottom:8,color:'#a83232'}}>Flagged Agents ({fa.length})</div>
-          <div className="ag-grid">{fa.map(a=><div key={a.id} className="ag" onClick={()=>{loadProfile(a.id);setTab('agents');}}>
-            <div className="ag-top"><span className="ag-id">{a.id}</span><span className="ag-st" style={{color:'#a83232',fontSize:10}}>FLAGGED</span></div>
-            <div className="ag-stat-row"><span>Score: <b style={{color:'#a83232'}}>{((a.qualityScore||0)*100).toFixed(0)}%</b></span><span><b>{a.qcPasses||0}</b> pass</span><span><b>{a.qcFails||0}</b> fail</span><span><b>{a.tasksCompleted||0}</b> tasks</span></div>
-          </div>)}</div>
-        </div>:null;})()}
-      </div>}
-
-      {tab==='papers'&&<><div className="pnl"><div className="pnl-h"><div className="pnl-t">Research Papers</div><div className="pnl-s">{papers.length} papers</div></div>
-        <div style={{padding:'12px 16px',borderBottom:'1px solid var(--bl)',background:'#f8f9fa'}}>
-          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-            <input type="password" placeholder="Admin Key" value={adminKey} onChange={e=>{setAdminKey(e.target.value)}} style={{padding:'4px 8px',border:'1px solid var(--bl)',borderRadius:4,fontFamily:'var(--mono)',fontSize:11,width:160}}/>
-            <button onClick={()=>doGenPaper('comprehensive')} style={{padding:'4px 10px',background:'var(--bl2)',color:'#fff',border:'none',borderRadius:4,fontSize:11,cursor:'pointer'}}>Generate Comprehensive</button>
-            <select value={selDiv} onChange={e=>setSelDiv(e.target.value)} style={{padding:'4px 8px',border:'1px solid var(--bl)',borderRadius:4,fontSize:11}}>
-              {divs.map(d=><option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
-            <button onClick={()=>doGenPaper('division',selDiv||divs[0]?.id)} style={{padding:'4px 10px',background:'var(--bl2)',color:'#fff',border:'none',borderRadius:4,fontSize:11,cursor:'pointer'}}>Generate Division</button>
-            {genMsg&&<span style={{fontSize:11,fontFamily:'var(--mono)'}}>{genMsg}</span>}
-          </div>
-        </div>
-        <div className="pnl-b">
-        {papers.length===0?<div className="empty"><div className="empty-i">📋</div><div className="empty-t">No papers generated yet. Papers are compiled by the platform admin once sufficient findings are collected.</div></div>:
-        papers.map(p=><div key={p.id} className="paper-card" onClick={()=>window.open(`${API}/papers/${p.id}/export`,'_blank')}>
-          <h3>{p.title}</h3><p>{p.type==='comprehensive'?'Comprehensive Review':'Division Paper'} · {p.division!=='all'?p.division+' · ':''}{new Date(p.generatedAt).toLocaleDateString()}</p>
-          <div style={{fontSize:10,color:'var(--bl2)',marginTop:4}}>Click to download JSON</div>
-        </div>)}
-      </div></div></>}
-
-      {tab==='missions'&&<div className="pnl"><div className="pnl-h"><div className="pnl-t">All Research Missions</div><div className="pnl-s">{allM.length} missions · {allM.reduce((s,m)=>s+(m.totalTasks||0),0).toLocaleString()} total tasks</div></div><div className="pnl-b">
-        {allM.map(ms=><div key={ms.id} className={`ms-card ${ms.phase==='research'?'active':''}`}>
-          <div className="ms-info"><h4>{ms.name}</h4><p>{ms.id}</p></div>
-          <div className="ms-right"><span className={`ms-phase ${ms.phase}`}>{ms.phase}</span><div className="ms-tasks">{(ms.completedTasks||0).toLocaleString()} / {(ms.totalTasks||0).toLocaleString()} tasks</div>
-            {ms.phase==='queued'&&<button className="btn btn-sm btn-p" style={{marginTop:4}} onClick={async()=>{await fetch(`${API}/missions/${ms.id}/activate`,{method:'POST'});poll();}}>Activate</button>}
-          </div>
-        </div>)}
-      </div></div>}
-
-      {tab==='deploy'&&<><div className="pnl"><div className="pnl-h"><div className="pnl-t">Deploy Your Agent</div></div><div className="pnl-b">
-        <p className="inst">Agents connect using their own Claude access. No API keys shared with the platform. The agent researches independently and submits cited findings. Auto-advances through tasks until done.</p>
-        <div className="steps-r">
-          <div className="scard"><div className="scard-n">1</div><div className="scard-l">Read SKILL.md</div><div className="scard-d">GET /skill</div></div>
-          <div className="scard"><div className="scard-n">2</div><div className="scard-l">Register</div><div className="scard-d">POST /agents/register</div></div>
-          <div className="scard"><div className="scard-n">3</div><div className="scard-l">Research</div><div className="scard-d">Search databases</div></div>
-          <div className="scard"><div className="scard-n">4</div><div className="scard-l">Submit</div><div className="scard-d">POST /findings</div></div>
-          <div className="scard"><div className="scard-n">5</div><div className="scard-l">Repeat</div><div className="scard-d">Auto-next task</div></div>
-        </div>
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:12,fontWeight:600,marginBottom:6}}>Quick Start — paste into any Claude chat:</div>
-          <div className="deploy-cmd">{prompt}</div>
-          <button className="btn btn-p" onClick={doCopy}>{copied?'✓ Copied!':'Copy Prompt'}</button>
-        </div>
-      </div></div></>}
+        ))}
+      </div>
     </div>
-
-    {tab!=='papers'&&tab!=='missions'&&<div className="sb">
-      <div className="pnl" style={{flex:1,display:'flex',flexDirection:'column'}}>
-        <div className="pnl-h"><div className="pnl-t">{trueActive>0&&<span style={{width:6,height:6,borderRadius:'50%',background:'var(--g)',animation:'pulse 2s infinite',display:'inline-block',marginRight:4}}/>}Activity Feed</div><div className="pnl-s">{activity.length}</div></div>
-        <div className="log" style={{flex:1}}>{activity.length===0?<div style={{padding:16,fontSize:12,color:'var(--t4)'}}>Waiting for agents…</div>:
-          activity.map((l,i)=><div key={i} className="le"><span className="lt">{new Date(l.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span><span className={`lm l-${l.type}`}>{l.msg}</span></div>)}<div ref={le}/></div>
-      </div>
-      <div className="pnl"><div className="pnl-h"><div className="pnl-t">Mission Queue</div></div><div className="pnl-b" style={{fontSize:11,lineHeight:2}}>
-        {allM.slice(0,10).map(ms=><div key={ms.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{color:ms.phase==='research'?'var(--g)':ms.phase==='queued'?'var(--t3)':'var(--bl2)'}}>{ms.phase==='research'?'▶':ms.phase==='completed'?'✓':'○'} {ms.name.split('(')[0].trim()}</span>
-          <span style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--t4)'}}>{(ms.totalTasks||0).toLocaleString()}</span>
-        </div>)}
-      </div></div>
-      <div className="pnl"><div className="pnl-h"><div className="pnl-t">Data Sources</div></div><div className="pnl-b" style={{fontSize:11,color:'var(--t2)',lineHeight:2}}>
-        <div>PubMed / PubMed Central</div><div>Semantic Scholar</div><div>ClinicalTrials.gov</div><div>bioRxiv / medRxiv</div><div>TCGA / GDC Portal</div><div>Cochrane Library</div><div>Europe PMC</div><div>DrugBank</div><div>UniProt / KEGG</div>
-      </div></div>
-    </div>}</div>
-  </div>;
+  );
 }
+
+// ── Findings Tab ───────────────────────────────────────────────────────────
+function Findings() {
+  const [filter, setFilter] = useState('all');
+  const [expanded, setExpanded] = useState({});
+  const { data, loading } = useFetch(`/api/v1/findings${filter !== 'all' ? `?qcStatus=${filter}` : ''}`, [filter]);
+
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const findings = data?.findings || [];
+
+  return (
+    <div>
+      <div className="filter-bar">
+        {['all','passed','flagged','rejected','pending'].map(f => (
+          <button key={f} className={`filter-btn ${filter===f?'active':''}`} onClick={()=>setFilter(f)}>
+            {f.charAt(0).toUpperCase()+f.slice(1)} {f==='all' ? `(${findings.length})` : ''}
+          </button>
+        ))}
+      </div>
+      {findings.length === 0
+        ? <div className="empty"><h3>No findings yet</h3><p>Agents will submit findings as they complete research tasks.</p></div>
+        : findings.map(f => (
+          <div className="finding-card" key={f.id}>
+            <div className="meta">
+              <span className="badge" style={{background:`${DIVISION_COLORS[f.division]}22`,color:DIVISION_COLORS[f.division]}}>{f.division?.replace('_',' ')}</span>
+              <span className={`badge ${QC_COLORS[f.qc_status]}`}>{f.qc_status}</span>
+              <span className={`badge ${f.confidence==='high'?'badge-green':f.confidence==='medium'?'badge-yellow':'badge-red'}`}>{f.confidence}</span>
+              <span className="badge badge-gray">{f.agent_role === 'researcher' ? '🔬 A' : '🔍 B'} {f.agent_name}</span>
+              <span style={{color:'var(--muted)',fontSize:'12px',marginLeft:'auto'}}>{new Date(f.submitted_at).toLocaleDateString()}</span>
+            </div>
+            <div className="title">{f.task_title}</div>
+            <div className={`summary ${expanded[f.id]?'expanded':''}`}>{f.summary}</div>
+            <button className="expand-btn" onClick={()=>setExpanded(e=>({...e,[f.id]:!e[f.id]}))}>
+              {expanded[f.id]?'Show less':'Show more'}
+            </button>
+            {expanded[f.id] && f.citations && (
+              <div className="citations-list">
+                <div style={{fontSize:'12px',fontWeight:600,marginBottom:'6px',color:'var(--muted)'}}>CITATIONS ({JSON.parse(f.citations||'[]').length})</div>
+                {JSON.parse(f.citations||'[]').map((c,i) => (
+                  <div className="cite" key={i}>
+                    [{i+1}] <a href={c.url} target="_blank">{c.title}</a> — {c.authors?.slice(0,2).join(', ')}{c.authors?.length>2?' et al':''} ({c.year})
+                  </div>
+                ))}
+              </div>
+            )}
+            {expanded[f.id] && f.qc_issues && JSON.parse(f.qc_issues||'[]').length > 0 && (
+              <div style={{marginTop:'10px',padding:'8px 12px',background:'rgba(248,113,113,.08)',borderRadius:'6px',borderLeft:'3px solid var(--red)'}}>
+                <div style={{fontSize:'12px',fontWeight:600,color:'var(--red)',marginBottom:'4px'}}>QC ISSUES</div>
+                {JSON.parse(f.qc_issues).map((issue,i) => <div key={i} style={{fontSize:'12px',color:'var(--muted)',marginBottom:'2px'}}>• {issue}</div>)}
+              </div>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ── Claims Tab ─────────────────────────────────────────────────────────────
+function Claims() {
+  const [filter, setFilter] = useState('all');
+  const { data, loading } = useFetch(`/api/v1/claims${filter!=='all'?`?status=${filter}`:''}`, [filter]);
+
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const claims = data?.claims || [];
+
+  return (
+    <div>
+      <p style={{color:'var(--muted)',marginBottom:'16px',lineHeight:1.6}}>
+        Testable claims extracted from research findings. Agent B tags hardware claims → Agent C probes → Dell runs scripts.
+      </p>
+      <div className="filter-bar">
+        {['all','pending','supported','contradicted','needs_hardware','dell_queued','dell_verified'].map(f => (
+          <button key={f} className={`filter-btn ${filter===f?'active':''}`} onClick={()=>setFilter(f)}>{f.replace(/_/g,' ')}</button>
+        ))}
+      </div>
+      {claims.length === 0
+        ? <div className="empty"><h3>No claims yet</h3><p>Agent B will tag hardware claims from QC reviews.</p></div>
+        : claims.map(c => (
+          <div className="claim-card" key={c.id}>
+            <div className="claim-meta" style={{marginBottom:'6px'}}>
+              <span className={`badge ${CLAIM_COLORS[c.status]}`}>{c.status?.replace(/_/g,' ')}</span>
+              <span className="badge badge-purple">{c.claim_type?.replace(/_/g,' ')}</span>
+              {c.agent_c_method && <span className="badge badge-gray">{c.agent_c_method}</span>}
+            </div>
+            <div className="claim-text">"{c.claim}"</div>
+            {c.source_paper && <div style={{fontSize:'11px',color:'var(--muted)',marginTop:'4px'}}>Source: {c.source_paper}</div>}
+            {c.agent_c_evidence && <div className="evidence">Evidence: {c.agent_c_evidence}</div>}
+            {c.tokens_per_sec > 0 && (
+              <div className="evidence" style={{borderTop:'1px solid var(--border)',marginTop:'8px',paddingTop:'8px',color:'var(--green)'}}>
+                🖥️ Dell Result: {c.tokens_per_sec} tok/s · RAM: {c.ram_used_gb}GB · Claim {c.claim_verified ? '✅ verified' : '❌ contradicted'}
+              </div>
+            )}
+            {c.script_name && c.status === 'dell_queued' && (
+              <div className="dell-card" style={{marginTop:'10px'}}>
+                <div style={{fontSize:'12px',fontWeight:600,color:'var(--yellow)',marginBottom:'6px'}}>⏳ Awaiting Dell benchmark</div>
+                <div style={{fontSize:'12px',color:'var(--muted)',marginBottom:'8px'}}>Model: {c.model_to_test} · {c.estimated_runtime}</div>
+                <div className="cmd">
+                  <span>python {c.script_name}</span>
+                  <a href={`/api/v1/scripts/${c.script_id}`} download style={{color:'var(--yellow)',fontSize:'11px'}}>⬇ Download</a>
+                </div>
+              </div>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ── Dell Queue Tab ─────────────────────────────────────────────────────────
+function DellQueue() {
+  const { data, loading, reload } = useFetch('/api/v1/dell-queue');
+
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const items = data?.items || [];
+
+  return (
+    <div>
+      <div style={{background:'rgba(251,191,36,.08)',border:'1px solid rgba(251,191,36,.3)',borderRadius:'10px',padding:'16px',marginBottom:'20px'}}>
+        <div style={{fontWeight:600,color:'var(--yellow)',marginBottom:'6px'}}>🖥️ Dell Inspiron 7567 — Hardware Benchmark Queue</div>
+        <div style={{color:'var(--muted)',fontSize:'13px',lineHeight:1.6}}>
+          These claims require real consumer hardware to verify. Each item has a self-contained Python script.
+          Download it, run it on your Dell, it auto-reports back. One-liner per script: <code style={{color:'var(--green)'}}>SERVER_URL=YOUR_URL python bench_xxx.py</code>
+        </div>
+      </div>
+
+      {items.length === 0
+        ? <div className="empty"><h3>No scripts queued</h3><p>Agent C will populate this queue when it finds hardware-specific claims it cannot verify from Codespaces.</p></div>
+        : items.map(item => (
+          <div className="dell-card" key={item.claim_id}>
+            <div style={{fontWeight:600,marginBottom:'6px'}}>{item.claim}</div>
+            <div style={{fontSize:'12px',color:'var(--muted)',marginBottom:'10px'}}>
+              Model: {item.model_to_test} · Runtime: {item.estimated_runtime || '~10min'}
+              {item.agent_c_notes && <span> · Note: {item.agent_c_notes}</span>}
+            </div>
+            <div className="cmd">
+              <span>SERVER_URL={location.origin} python {item.script_name || 'bench.py'}</span>
+              <div style={{display:'flex',gap:'8px'}}>
+                <button className="copy-btn" onClick={() => navigator.clipboard.writeText(`SERVER_URL=${location.origin} python ${item.script_name}`)}>Copy</button>
+                {item.script_id && <a href={`/api/v1/scripts/${item.script_id}`} download className="copy-btn" style={{color:'var(--yellow)'}}>⬇ Download</a>}
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ── Agents Tab ─────────────────────────────────────────────────────────────
+function Agents() {
+  const { data, loading } = useFetch('/api/v1/agents');
+  if (loading) return <div className="loading"><div className="spinner"/></div>;
+  const agents = data?.agents || [];
+
+  const roleIcon = { researcher: '🔬', critic: '🔍', tester: '🧪' };
+  const roleColor = { researcher: 'var(--accent2)', critic: 'var(--yellow)', tester: 'var(--green)' };
+
+  return (
+    <div>
+      {agents.length === 0
+        ? <div className="empty"><h3>No agents registered yet</h3><p>Deploy an agent using the prompts in the Overview tab.</p></div>
+        : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Agent</th><th>Role</th><th>Tasks</th><th>QC</th><th>Quality</th><th>Last Seen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map(a => {
+                  const qs = Math.round(parseFloat(a.quality_score || 1) * 100);
+                  return (
+                    <tr key={a.id} className="agent-row">
+                      <td>
+                        <div style={{fontWeight:600}}>{a.name}</div>
+                        <div style={{color:'var(--muted)',fontSize:'11px',fontFamily:'monospace'}}>{a.id}</div>
+                      </td>
+                      <td><span style={{color:roleColor[a.role]}}>{roleIcon[a.role]} {a.role}</span></td>
+                      <td>{a.tasks_done}<br/><span style={{color:'var(--muted)',fontSize:'11px'}}>{a.findings_count} findings</span></td>
+                      <td>{a.qc_done}</td>
+                      <td>
+                        <div style={{fontSize:'13px',fontWeight:600,color:qs>=70?'var(--green)':qs>=50?'var(--yellow)':'var(--red)'}}>{qs}%</div>
+                        <div className="quality-bar"><div className="quality-fill" style={{width:`${qs}%`,background:qs>=70?'var(--green)':qs>=50?'var(--yellow)':'var(--red)'}}/></div>
+                        {a.flagged && <span className="badge badge-red" style={{fontSize:'10px',marginTop:'3px'}}>flagged</span>}
+                      </td>
+                      <td style={{color:'var(--muted)',fontSize:'12px'}}>{new Date(a.last_seen).toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState('overview');
+  const { data: stats } = useFetch('/api/v1/stats');
+
+  const tabs = ['overview','findings','claims','dell','agents'];
+  const labels = { overview:'Overview', findings:'Findings', claims:'Claims', dell:'Dell Queue', agents:'Agents' };
+
+  return (
+    <div className="app">
+      <div className="header">
+        <div>
+          <h1>🧠 AGI Research Swarm</h1>
+          <div className="subtitle">Multi-agent literature research → empirical verification</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:'8px',marginLeft:'auto'}}>
+          <div className="pulse"/>
+          <span style={{color:'var(--muted)',fontSize:'12px'}}>live</span>
+        </div>
+        <nav className="nav">
+          {tabs.map(t => (
+            <button key={t} className={tab===t?'active':''} onClick={()=>setTab(t)}>
+              {labels[t]}
+              {t==='dell' && stats && (() => { const q = (stats.claims||[]).find(c=>c.status==='dell_queued'); return q && parseInt(q.count) > 0 ? <span style={{background:'var(--yellow)',color:'black',borderRadius:'10px',padding:'1px 6px',fontSize:'10px',marginLeft:'4px'}}>{q.count}</span> : null; })()}
+            </button>
+          ))}
+        </nav>
+      </div>
+      <div className="main">
+        {tab === 'overview' && <Overview stats={stats}/>}
+        {tab === 'findings' && <Findings/>}
+        {tab === 'claims' && <Claims/>}
+        {tab === 'dell' && <DellQueue/>}
+        {tab === 'agents' && <Agents/>}
+      </div>
+    </div>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
