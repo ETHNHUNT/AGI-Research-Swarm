@@ -171,18 +171,33 @@ app.get('/api/v1/dashboard', async (req, res) => {
       return res.json({ mission: null, stats: {}, divisions: [], recentFindings: [], recentActivity: [], allMissions: await db.getAllMissions() });
     }
 
-    const taskStats = await db.getTaskStats(mission.id);
-    const divStats = await db.getDivisionStats(mission.id);
-    const agentCounts = await db.getQueueAgentCounts(mission.id);
-    const findings = await db.getFindings(mission.id, { limit: 50 });
-    const activity = await db.getRecentActivity(mission.id, 100);
-    const totalPapers = await db.totalPapers(mission.id);
-    const activeAgents = await db.countActiveAgents(mission.id);
-    const activeAgentList = await db.getActiveAgents(mission.id);
-    const allAgentList = await db.getAllAgents(mission.id);
-    const allMissions = await db.getAllMissions();
-    const qcStats = await db.getQCStats(mission.id);
-    const papers = await db.getPapers(mission.id);
+    const [
+      taskStats,
+      divStats,
+      agentCounts,
+      findings,
+      activity,
+      totalPapers,
+      activeAgents,
+      activeAgentList,
+      allAgentList,
+      allMissions,
+      qcStats,
+      papers
+    ] = await Promise.all([
+      db.getTaskStats(mission.id),
+      db.getDivisionStats(mission.id),
+      db.getQueueAgentCounts(mission.id),
+      db.getFindings(mission.id, { limit: 50 }),
+      db.getRecentActivity(mission.id, 100),
+      db.totalPapers(mission.id),
+      db.countActiveAgents(mission.id),
+      db.getActiveAgents(mission.id),
+      db.getAllAgents(mission.id),
+      db.getAllMissions(),
+      db.getQCStats(mission.id),
+      db.getPapers(mission.id)
+    ]);
 
     // Build division structure
     const divMap = {};
