@@ -209,6 +209,7 @@ const ftagClass=d=>{
   return'ftag-r';
 };
 
+const isSafeUrl=u=>{try{return['http:','https:'].includes(new URL(u,window.location.origin).protocol);}catch(e){return false;}};
 function Citation({c}){
   if(typeof c==='string')return<div className="cit">{c}</div>;
   const doi=c.doi||c.DOI;
@@ -217,7 +218,7 @@ function Citation({c}){
     <div className="cit-title">{c.title||'Untitled'}</div>
     <div className="cit-meta">{c.authors&&<span>{c.authors}</span>}{c.journal&&<span> · {c.journal}</span>}{c.year&&<span> ({c.year})</span>}{c.studyType&&<span> · {c.studyType}</span>}{c.sampleSize&&<span> · {c.sampleSize}</span>}</div>
     {doi&&<div className="cit-doi">DOI: <a href={`https://doi.org/${doi}`} target="_blank" rel="noopener">{doi}</a></div>}
-    {!doi&&url&&<div className="cit-doi"><a href={url} target="_blank" rel="noopener">{url}</a></div>}
+    {!doi&&url&&<div className="cit-doi">{isSafeUrl(url)?<a href={url} target="_blank" rel="noopener">{url}</a>:url}</div>}
     {c.keyFinding&&<div className="cit-kf">↳ {c.keyFinding}</div>}
   </div>;
 }
