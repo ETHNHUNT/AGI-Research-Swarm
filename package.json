@@ -4,6 +4,7 @@
   "description": "Research Swarm — Multi-Agent Cancer Research Platform",
   "main": "backend/server.js",
   "scripts": {
+    "test": "node --test tests/*.js",
     "start": "node backend/server.js",
     "dev": "node --watch backend/server.js",
     "db:init": "node backend/db.js init"
