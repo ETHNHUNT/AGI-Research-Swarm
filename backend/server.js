@@ -634,7 +634,7 @@ app.post('/api/v1/agents/:id/disconnect', async (req, res) => {
 // ============================================================
 app.post('/api/v1/admin/release-stale', async (req, res) => {
   try {
-    const key = req.headers['x-admin-key'] || req.query.key;
+    const key = req.headers['x-admin-key'];
     if (!ADMIN_KEY || key !== ADMIN_KEY) return res.status(403).json({ error: 'Unauthorized' });
     const hours = parseInt(req.query.hours) || 2;
     const stale = await db.getTimedOutAgents(hours * 3600000);
@@ -746,7 +746,7 @@ app.post('/api/v1/qc/review/:findingId', async (req, res) => {
 // Reset QC cycle — allows re-reviewing all findings (or just flagged ones)
 app.post('/api/v1/qc/reset-cycle', async (req, res) => {
   try {
-    const key = req.headers['x-admin-key'] || req.query.key;
+    const key = req.headers['x-admin-key'];
     if (!ADMIN_KEY || key !== ADMIN_KEY) return res.status(403).json({ error: 'Unauthorized' });
     const mission = await db.getActiveMission();
     if (!mission) return res.status(503).json({ error: 'No active mission' });
@@ -863,7 +863,7 @@ app.get('/api/v1/export/findings', async (req, res) => {
 // ============================================================
 app.post('/api/v1/papers/generate', async (req, res) => {
   try {
-    const key = req.headers['x-admin-key'] || req.query.key;
+    const key = req.headers['x-admin-key'];
     if (!ADMIN_KEY || key !== ADMIN_KEY) return res.status(403).json({ error: 'Unauthorized — paper generation is admin-only' });
     const { missionId, divisionId, type } = req.body; // type: 'division' | 'comprehensive'
     const mission = missionId ? await db.getMission(missionId) : await db.getActiveMission();
