@@ -195,9 +195,9 @@ app.get('/api/v1/health', async (req, res) => {
 });
 
 // SKILL.md
-app.get('/api/v1/skill', (req, res) => {
+app.get('/api/v1/skill', async (req, res) => {
   try {
-    let skill = fs.readFileSync(SKILL_PATH, 'utf8');
+    let skill = await fs.promises.readFile(SKILL_PATH, 'utf8');
     res.type('text/markdown').send(skill);
   } catch (e) {
     res.status(500).json({ error: 'SKILL.md not found' });
