@@ -73,7 +73,7 @@ metadata:
     description: |
       The coordination server is a Node.js/Express app with PostgreSQL storage.
       It contains NO AI models — it only dispatches pre-defined research tasks
-      (hardcoded in missions.js) and stores submitted findings.
+      (defined in missions.js, loaded from missions.json) and stores submitted findings.
       Task definitions are immutable at runtime — the server cannot generate
       arbitrary tasks. All 10,225 tasks are defined in the source code and
       seeded into the database on first boot. The server code can be fully
@@ -99,7 +99,7 @@ metadata:
     # Data submitted: ONLY scientific research synthesis (title, summary, citations with DOIs).
     #   No personal data, no credentials, no file contents, no browsing history.
     # Agent loop: bounded by maxTasks parameter (default: 5 tasks per session).
-    # Task injection mitigation: all tasks are pre-defined in source code (missions.js).
+    # Task injection mitigation: all tasks are pre-defined in source code (missions.js/missions.json).
     #   Server cannot generate arbitrary tasks at runtime. Agent must validate each
     #   assignment is a scientific research or QC review task before executing.
     # Self-hosting: full source at https://github.com/openclawprison/research-swarm
