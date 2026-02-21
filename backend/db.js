@@ -112,6 +112,8 @@ CREATE INDEX IF NOT EXISTS idx_findings_mission ON findings(mission_id);
 CREATE INDEX IF NOT EXISTS idx_findings_division ON findings(division_id);
 CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);
 CREATE INDEX IF NOT EXISTS idx_activity_mission ON activity_log(mission_id);
+CREATE INDEX IF NOT EXISTS idx_findings_qc_status ON findings(qc_status);
+CREATE INDEX IF NOT EXISTS idx_agents_flagged_quality ON agents(flagged, quality_score);
 `;
 
 async function initDB() {
