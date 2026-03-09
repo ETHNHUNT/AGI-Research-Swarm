@@ -1038,10 +1038,14 @@ app.get('*', (req, res) => {
 // ============================================================
 // START
 // ============================================================
-app.listen(PORT, () => {
-  console.log(`\n🌐 Server starting on port ${PORT}...`);
-  startup().catch(e => {
-    console.error('❌ Startup failed:', e);
-    process.exit(1);
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n🌐 Server starting on port ${PORT}...`);
+    startup().catch(e => {
+      console.error('❌ Startup failed:', e);
+      process.exit(1);
+    });
   });
-});
+}
+
+module.exports = app;
